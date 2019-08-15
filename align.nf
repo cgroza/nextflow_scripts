@@ -5,7 +5,8 @@ bams = Channel.fromPath("bams/*.bam")
 
 process bamToFastqGz {
 time '12h'
-memory "10 GB"
+cpus 12
+memory "20 GB"
 
 input:
 file bam from bams
