@@ -1,13 +1,13 @@
-params.xg = "$launchDir/EU_AF_index.xg"
-params.gbwt = "$launchDir/EU_AF_index.gbwt"
+params.xg = "$workflow.launchDir/EU_AF_index.xg"
+params.gbwt = "$workflow.launchDir/EU_AF_index.gbwt"
 
 bams = Channel.fromPath("bams/*.bam")
-file("$launchDir/gams").mkdir()
+file("$workflow.launchDir/gams").mkdir()
 
 process alignFastq {
 time '2d'
 cpus 40
-publishDir "$launchDir/gams"
+publishDir "$workflow.launchDir/gams"
 
 input:
 file bam from bams
