@@ -7,6 +7,7 @@ file("$workflow.launchDir/gams").mkdir()
 process alignFastq {
 time '2d'
 cpus 40
+memory '100 GB'
 publishDir "$workflow.launchDir/gams"
 
 input:
