@@ -60,7 +60,7 @@ vg index -x "${params.genome}_index.xg" -t 40 -b ~/scratch/temp  -F $threads *.v
 process indexGCSA {
 cpus 40
 time '1d'
-memory '150 GB'
+memory '180 GB'
 publishDir "$workflow.launchDir"
 
 input:
@@ -73,7 +73,7 @@ file "${params.genome}_index.gcsa.lcp"
 
 script:
 """
-ls *.vg | parallel -j "vg prune -u -g $gbwt {} > pruned.{}"
+ls *.vg | parallel -j 12 "vg prune -u -g $gbwt {} > pruned.{}"
 vg index -g ${params.genome}_index.gcsa pruned.*.vg
 """
 }
