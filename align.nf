@@ -1,13 +1,13 @@
-params.xg = "$baseDir/EU_AF_index.xg"
-params.gbwt = "$baseDir/EU_AF_index.gbwt"
+params.xg = "$launchDir/EU_AF_index.xg"
+params.gbwt = "$launchDir/EU_AF_index.gbwt"
 
 bams = Channel.fromPath("bams/*.bam")
-file("$baseDir/gams").mkdir()
+file("$launchDir/gams").mkdir()
 
 process alignFastq {
 time '2d'
 cpus 40
-publishDir "$baseDir/gams"
+publishDir "$launchDir/gams"
 
 input:
 file bam from bams
