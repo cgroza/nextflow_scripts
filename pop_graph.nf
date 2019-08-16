@@ -70,10 +70,12 @@ file gbwt from hap_index
 output:
 file "${params.genome}_index.gcsa"
 file "${params.genome}_index.gcsa.lcp"
+file "graphs/*.vg"
 
 script:
 """
-ls *.vg | parallel -j 12 "vg prune -u -g $gbwt {} > pruned.{}"
+mkdir graphs
+ls *.vg | parallel -j 12 "vg prune -u -g $gbwt {} > graphs/pruned.{}"
 vg index -g ${params.genome}_index.gcsa pruned.*.vg
 """
 }
