@@ -2,7 +2,7 @@ params.ref = "/home/cgroza/Homo_sapiens.hg19.noalts.fa"
 params.vcf = "$workflow.launchDir/renamed_Epi_EU_AF_phased.vcf.gz"
 params.genome = "EU_AF"
 
-vcf_ch = Channel.fromPath($params.vcf)
+vcf_ch = Channel.fromPath(params.vcf)
 
 process makeVg {
 time '6h'
