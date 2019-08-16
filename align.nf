@@ -18,6 +18,6 @@ file "${bam_name}.gam" into aln
 script:
 bam_name = bam.getBaseName()
 """
-vg map -k 18 --threads 40 --xg-name $params.xg --gbwt-name $params.gbwt -i $bam > ${bam_name}.gam
+vg map -k 18 --threads 40 --xg-name $params.xg --gbwt-name $params.gbwt -b $bam > ${bam_name}.gam
 """
 }
