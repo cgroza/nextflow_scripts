@@ -13,7 +13,9 @@ input:
 file vcf from vcf_ch
 
 output:
-file "graphs/*.vg" into vgs
+file "graphs/*.vg" into vgs_ch_gbwt
+file "graphs/*.vg" into vgs_ch_xg
+file "graphs/*.vg" into vgs_ch_gcsa
 
 script:
 """
@@ -30,7 +32,7 @@ memory '150 GB'
 publishDir "$workflow.launchDir"
 
 input:
-file "*.vg" from vgs.collect()
+file "*.vg" from vgs_ch_gbwt.collect()
 
 output:
 file "${params.genome}_threads.db" into db_thread
@@ -51,7 +53,7 @@ publishDir "$workflow.launchDir"
 
 input:
 file threads from db_thread
-file "*.vg" from vgs.collect()
+file "*.vg" from vgs_ch_xg.collect()
 
 output:
 file "${params.genome}_index.xg" into xg_ch
@@ -69,7 +71,7 @@ memory '180 GB'
 publishDir "$workflow.launchDir"
 
 input:
-file "*.vg" from vgs.collect()
+file "*.vg" from vgs_ch_gcsa.collect()
 file gbwt from hap_index
 
 output:
