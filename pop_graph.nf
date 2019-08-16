@@ -2,10 +2,15 @@ params.ref = "/home/cgroza/Homo_sapiens.hg19.noalts.fa"
 params.vcf = "$workflow.launchDir/renamed_Epi_EU_AF_phased.vcf.gz"
 params.genome = "EU_AF"
 
+vcf_ch = Channel.fromPath($params.vcf)
+
 process makeVg {
 time '6h'
 memory '100 GB'
 cpus 6
+
+input:
+file vcf from vcf_ch
 
 output:
 file "graphs/*.vg" into vgs
@@ -13,7 +18,7 @@ file "graphs/*.vg" into vgs
 script:
 """
 mkdir graphs
-(seq 1 22; echo X; echo Y) | parallel -j 6  "vg construct -a -p -C -R chr{} -v $params.vcf -r $params.ref -t 1 -m 32 > graphs/chr{}.vg"
+(seq 1 22; echo X; echo Y) | parallel -j 6  "vg construct -a -p -C -R chr{} -v $vcf -r $params.ref -t 1 -m 32 > graphs/chr{}.vg"
 vg ids -j \$(for i in \$(seq 1 22; echo X; echo Y); do echo graphs/chr\$i.vg; done)
 """
 }
