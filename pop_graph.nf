@@ -43,6 +43,7 @@ file "${params.genome}_index.xg" into xg_ch
 
 script:
 """
+TMPDIR=/home/cgroza/scratch/temp
 vg index -x ${params.genome}_index.xg -G ${params.genome}_index.gbwt -v $vcf *.vg
 """
 }
@@ -66,6 +67,7 @@ file "graphs/*.vg"
 script:
 """
 mkdir graphs
+TMPDIR=/home/cgroza/scratch/temp
 ls *.vg | parallel -j 3 "vg prune -u -g $gbwt {} > graphs/pruned.{}"
 vg index -g ${params.genome}_index.gcsa pruned.*.vg
 """
