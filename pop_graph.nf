@@ -1,6 +1,7 @@
 params.ref = "/home/cgroza/Homo_sapiens.hg19.noalts.fa"
-params.vcf = "$workflow.launchDir/renamed_Epi_EU_AF_phased.vcf.gz"
 params.genome = "EU_AF"
+params.outdir = workflow.launchDir
+params.vcf = "$params.outdir/renamed_Epi_EU_AF_phased.vcf.gz"
 
 vcf_ch = Channel.fromPath(params.vcf)
 
@@ -13,12 +14,12 @@ input:
 file vcf from vcf_ch
 
 output:
-file "graphs/*.vg" into vgs_ch_gbwt
-file "graphs/*.vg" into vgs_ch_xg
-file "graphs/*.vg" into vgs_ch_gcsa
+file "graphs/*.vg" into { vgs_ch_gbwt; vgs_ch_xg; vgs_ch_gcsa}
 
 script:
 """
+module load tabix
+tabix $vcf
 mkdir graphs
 (seq 1 22; echo X; echo Y) | parallel -j 6  "vg construct -a -p -C -R chr{} -v $vcf -r $params.ref -t 1 -m 32 > graphs/chr{}.vg"
 vg ids -j \$(for i in \$(seq 1 22; echo X; echo Y); do echo graphs/chr\$i.vg; done)
@@ -29,7 +30,7 @@ process indexGBWT {
 cpus 40
 time '1d'
 memory '150 GB'
-publishDir "$workflow.launchDir"
+publishDir "$params.outdir", mode: 'copy'
 
 input:
 file "*.vg" from vgs_ch_gbwt.collect()
@@ -49,7 +50,7 @@ process indexXg {
 cpus 40
 time '1d'
 memory '100 GB'
-publishDir "$workflow.launchDir"
+publishDir "$params.outdir", mode: 'copy'
 
 input:
 file threads from db_thread
@@ -68,7 +69,7 @@ process indexGCSA {
 cpus 40
 time '1d'
 memory '180 GB'
-publishDir "$workflow.launchDir"
+publishDir "$params.outdir", mode: 'copy'
 
 input:
 file "*.vg" from vgs_ch_gcsa.collect()
