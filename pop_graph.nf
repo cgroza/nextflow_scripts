@@ -85,7 +85,7 @@ file "graphs/*.vg"
 script:
 """
 mkdir graphs
-ls *.vg | parallel -j 12 "vg prune -u -g $gbwt {} > graphs/pruned.{}"
+ls *.vg | parallel -j 3 "vg prune -u -g $gbwt {} > graphs/pruned.{}"
 vg index -g ${params.genome}_index.gcsa pruned.*.vg
 """
 }
