@@ -66,7 +66,7 @@ publishDir "$params.outdir", mode: 'copy'
 
 input:
 file "*" from vgs_ch_gcsa.collect()
-file "*" from gbwt_ch.colelct()
+file "*" from gbwt_ch.collect()
 file mapping from mapping_ch
 
 output:
