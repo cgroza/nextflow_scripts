@@ -51,7 +51,7 @@ file "*.gbwt" into gbwt_ch
 script:
 """
 TMPDIR=/home/cgroza/scratch/temp
-(seq 1 22; echo X; echo Y) | parallel -j 8 "vg index -G chr{}.gbwt -v {}.vcf.gz {}.vg"
+(seq 1 22; echo X; echo Y) | parallel -j 8 "touch -h {}.vcf.gz.tbi ; vg index -G chr{}.gbwt -v {}.vcf.gz {}.vg"
 vg gbwt -m -f -o ${params.genome}_index.gbwt chr*.gbwt
 vg index -x ${params.genome}_index.xg *.vg
 """
