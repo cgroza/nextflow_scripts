@@ -44,8 +44,9 @@ file "*.vcf.gz" from vcf_ch.collect()
 file "*.vcf.gz.tbi" from vcf_index_ch.collect()
 
 output:
-file "${params.genome}_index.gbwt" into gbwt_ch
+file "${params.genome}_index.gbwt"
 file "${params.genome}_index.xg" into xg_ch
+file "*.gbwt" into gbwt_ch
 
 script:
 """
@@ -65,7 +66,7 @@ publishDir "$params.outdir", mode: 'copy'
 
 input:
 file "*.vg" from vgs_ch_gcsa.collect()
-file "*.gbwt" from gbwt_ch
+file "*.gbwt" from gbwt_ch.colelct()
 file mapping from mapping_ch
 
 output:
