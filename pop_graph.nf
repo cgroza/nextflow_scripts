@@ -14,7 +14,9 @@ input:
 file vcf from vcf_ch
 
 output:
-file "graphs/*.vg" into { vgs_ch_gbwt; vgs_ch_xg; vgs_ch_gcsa}
+file "graphs/*.vg" into vgs_ch_gbwt
+file "graphs/*.vg" into vgs_ch_xg
+file "graphs/*.vg" into vgs_ch_gcsa
 
 script:
 """
