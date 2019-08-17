@@ -3,7 +3,7 @@ params.genome = "EU_AF"
 params.outdir = workflow.launchDir
 params.vcf = "$params.outdir/renamed_Epi_EU_AF_phased.vcf.gz"
 
-vcf_ch = Channel.fromPath(params.vcf)
+Channel.fromPath(params.vcf).into{vcf_con_ch; vcf_gbwt_ch}
 
 process makeVg {
 time '6h'
@@ -11,11 +11,10 @@ memory '100 GB'
 cpus 6
 
 input:
-file vcf from vcf_ch
+file vcf from vcf_con_ch
 
 output:
 file "graphs/*.vg" into vgs_ch_gbwt
-file "graphs/*.vg" into vgs_ch_xg
 file "graphs/*.vg" into vgs_ch_gcsa
 
 script:
@@ -36,36 +35,18 @@ publishDir "$params.outdir", mode: 'copy'
 
 input:
 file "*.vg" from vgs_ch_gbwt.collect()
+file vcf from vcf_gbwt_ch
 
 output:
-file "${params.genome}_threads.db" into db_thread
-file "${params.genome}_thread_seqs.fa" into hap_seqs
-file "${params.genome}_index.gbwt" into hap_index
-
-script:
-"""
-vg index -F ${params.genome}_threads.db -H ${params.genome}_thread_seqs.fa -G ${params.genome}_index.gbwt -t 40 -b ~/scratch/temp  -v $params.vcf *.vg
-"""
-}
-
-process indexXg {
-cpus 40
-time '1d'
-memory '100 GB'
-publishDir "$params.outdir", mode: 'copy'
-
-input:
-file threads from db_thread
-file "*.vg" from vgs_ch_xg.collect()
-
-output:
+file "${params.genome}_index.gbwt" into gbwt_ch
 file "${params.genome}_index.xg" into xg_ch
 
 script:
 """
-vg index -x "${params.genome}_index.xg" -t 40 -b ~/scratch/temp  -F $threads *.vg
+vg index -x ${params.genome}_index.xg -G ${params.genome}_index.gbwt -v $vcf *.vg
 """
 }
+
 
 process indexGCSA {
 cpus 40
@@ -75,7 +56,7 @@ publishDir "$params.outdir", mode: 'copy'
 
 input:
 file "*.vg" from vgs_ch_gcsa.collect()
-file gbwt from hap_index
+file gbwt from gbwt_ch
 
 output:
 file "${params.genome}_index.gcsa"
