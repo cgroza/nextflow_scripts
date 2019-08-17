@@ -44,6 +44,8 @@ file "${params.genome}_index.xg" into xg_ch
 script:
 """
 TMPDIR=/home/cgroza/scratch/temp
+module load tabix
+tabix $vcf
 vg index -x ${params.genome}_index.xg -G ${params.genome}_index.gbwt -v $vcf *.vg
 """
 }
