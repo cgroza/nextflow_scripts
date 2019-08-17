@@ -10,6 +10,8 @@ time '6h'
 memory '100 GB'
 cpus 6
 
+publishDir "$params.outdir/graphs", mode: 'copy', pattern: "*.vg"
+
 input:
 file vcf from vcf_con_ch
 
@@ -36,7 +38,8 @@ process indexGBWT_XG {
 cpus 40
 time '1d'
 memory '150 GB'
-publishDir "$params.outdir", mode: 'copy'
+publishDir "$params.outdir", mode: 'copy', pattern: "${params.genome}_index.gbwt"
+publishDir "$params.outdir", mode: 'copy', pattern: "${params.genome}_index.xg"
 
 input:
 file "*" from vgs_ch_gbwt.collect()
