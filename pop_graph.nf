@@ -77,8 +77,9 @@ script:
 """
 mkdir graphs
 TMPDIR=/home/cgroza/scratch/temp
+cp ${mapping} mapping.backup
 for i in \$(seq 1 22; echo X; echo Y); do
-    vg prune -a -m ${mapping} -u -g chr\${i}.gbwt chr\${i}.vg > graphs/chr\${i}.pruned.vg
+    vg prune -a -m mapping.backup -u -g chr\${i}.gbwt chr\${i}.vg > graphs/chr\${i}.pruned.vg
 done
 
 vg index -g ${params.genome}_index.gcsa graphs/*.vg
