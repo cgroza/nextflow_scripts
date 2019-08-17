@@ -40,8 +40,8 @@ publishDir "$params.outdir", mode: 'copy'
 
 input:
 file "*.vg" from vgs_ch_gbwt.collect()
-file "*.vcf.gz" from vcf_ch
-file "*.vcf.gz.tbi" from vcf_index_ch
+file "*.vcf.gz" from vcf_ch.collect()
+file "*.vcf.gz.tbi" from vcf_index_ch.collect()
 
 output:
 file "${params.genome}_index.gbwt" into gbwt_ch
