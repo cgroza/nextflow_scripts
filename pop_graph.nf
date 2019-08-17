@@ -39,9 +39,9 @@ memory '150 GB'
 publishDir "$params.outdir", mode: 'copy'
 
 input:
-file "*.vg" from vgs_ch_gbwt.collect()
-file "*.vcf.gz" from vcf_ch.collect()
-file "*.vcf.gz.tbi" from vcf_index_ch.collect()
+file "*" from vgs_ch_gbwt.collect()
+file "*" from vcf_ch.collect()
+file "*" from vcf_index_ch.collect()
 
 output:
 file "${params.genome}_index.gbwt"
@@ -51,7 +51,7 @@ file "*.gbwt" into gbwt_ch
 script:
 """
 TMPDIR=/home/cgroza/scratch/temp
-(seq 1 22; echo X; echo Y) | parallel -j 8 "touch -h {}.vcf.gz.tbi ; vg index -G chr{}.gbwt -v {}.vcf.gz {}.vg"
+(seq 1 22; echo X; echo Y) | parallel -j 8 "touch -h chr{}.vcf.gz.tbi ; vg index -G chr{}.gbwt -v chr{}.vcf.gz chr{}.vg"
 vg gbwt -m -f -o ${params.genome}_index.gbwt chr*.gbwt
 vg index -x ${params.genome}_index.xg *.vg
 """
@@ -65,8 +65,8 @@ memory '180 GB'
 publishDir "$params.outdir", mode: 'copy'
 
 input:
-file "*.vg" from vgs_ch_gcsa.collect()
-file "*.gbwt" from gbwt_ch.colelct()
+file "*" from vgs_ch_gcsa.collect()
+file "*" from gbwt_ch.colelct()
 file mapping from mapping_ch
 
 output:
@@ -78,7 +78,7 @@ script:
 mkdir graphs
 TMPDIR=/home/cgroza/scratch/temp
 for i in \$(seq 1 22; echo X; echo Y); do
-    vg prune -a -m ${mapping} -u -g \${i}.gbwt \${i}.vg > graphs/chr\${i}.pruned.vg
+    vg prune -a -m ${mapping} -u -g chr\${i}.gbwt chr\${i}.vg > graphs/chr\${i}.pruned.vg
 done
 
 vg index -g ${params.genome}_index.gcsa graphs/*.vg
