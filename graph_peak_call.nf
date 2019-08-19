@@ -180,7 +180,7 @@ process sortSampleRef {
     publishDir "$params.outDir", pattern: "ref_${name}.sorted.gam"
 
     input:
-    set val(name), file(gam) into ref_treatment_gam_ch
+    set name, file(gam) into ref_treatment_gam_ch
 
     output:
     file "ref_${name}.sorted.gam"
@@ -224,7 +224,7 @@ process sortSamplePop {
     publishDir "$params.outDir", pattern: "${name}.sorted.gam"
 
     input:
-    set val(name), file(gam) into treatment_gam_ch
+    set name, file(gam) into treatment_gam_ch
 
     output:
     file "${name}.sorted.gam"
@@ -243,7 +243,7 @@ process callPeaksPop{
     publishDir "$params.outDir", pattern: "ref_${sample}_peaks.narrowPeak"
 
     input:
-    set val(name), file("json/*"), file("control_json/*"), file("graphs/*") from treatment_json_ch.combine(control_json_ch.collect()).combine(peak_linear_ch.collect()).view()
+    set name, file("json/*"), file("control_json/*"), file("graphs/*") from treatment_json_ch.combine(control_json_ch.collect()).combine(peak_linear_ch.collect()).view()
 
     output:
     file "ref_${sample}_peaks.narrowPeak"
@@ -267,7 +267,7 @@ process callPeaksRef{
     publishDir "$params.outDir", pattern: "ref_${sample}_peaks.narrowPeak"
 
     input:
-    set val(name), file("json/*"), file("control_json/*"), file("graphs/*") from ref_treatment_json_ch.combine(control_json_ch.collect()).combine(ref_peak_linear_ch.collect()).view()
+    set name, file("json/*"), file("control_json/*"), file("graphs/*") from ref_treatment_json_ch.combine(control_json_ch.collect()).combine(ref_peak_linear_ch.collect()).view()
 
     output:
     file "ref_${sample}_peaks.narrowPeak"
