@@ -180,7 +180,7 @@ process sortSampleRef {
     publishDir "$params.outDir", pattern: "ref_${name}.sorted.gam"
 
     input:
-    set val(name), file(gam) into ref_treatment_gam_ch
+    set val(name), file(gam) from ref_treatment_gam_ch
 
     output:
     file "ref_${name}.sorted.gam"
@@ -224,7 +224,7 @@ process sortSamplePop {
     publishDir "$params.outDir", pattern: "${name}.sorted.gam"
 
     input:
-    set val(name), file(gam) into treatment_gam_ch
+    set val(name), file(gam) from treatment_gam_ch
 
     output:
     file "${name}.sorted.gam"
