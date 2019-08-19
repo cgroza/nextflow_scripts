@@ -19,7 +19,6 @@ Channel.fromPath("${params.control_fastq").into{control_fastq_ch, ref_control_ch
 
 Channel.fromPath(
     ["${params.ref_graph}/${params.ref_name}.xg",
-     "${params.ref_graph}/${params.ref_name}.gbwt",
      "${params.ref_graph}/${params.ref_name}.gcsa",
      "${params.ref_graph}/${params.ref_name}.gcsa.lcp"]).into{ref_index_treatment_ch, ref_index_control_ch}
 
@@ -106,7 +105,7 @@ process alignControlRef {
     time '12h'
 
     input:
-    set file(xg), file(gbwt), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs/*") from ref_index_control_ch.collect().combine(ref_control_fastq_ch).combine(ref_control_linear_ch.collect()).view()
+    set file(xg), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs/*") from ref_index_control_ch.collect().combine(ref_control_fastq_ch).combine(ref_control_linear_ch.collect()).view()
 
     output:
     file("control_json/*") into ref_control_json_ch
@@ -115,7 +114,7 @@ process alignControlRef {
     name = fastq.getSimpleName()
     """
     mkdir control_gam
-    vg map -f $fastq -1 $gbwt -x $xg -g $gcsa -t 40 -u 1 -m 1 > "control_gam/${name}_ref.gam"
+    vg map -f $fastq -x $xg -g $gcsa -t 40 -u 1 -m 1 > "control_gam/${name}_ref.gam"
 
     mkdir control_json
     vg view -aj control_gam/${name}_ref.gam > control_json/${name}_ref.json
@@ -154,7 +153,7 @@ process alignSampleRef {
     time '12h'
 
     input:
-    set file(xg), file(gbwt), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs/*") from ref_index_treatment_ch.collect().combine(ref_fastq_ch).combine(ref_treatment_linear_ch.collect()).view()
+    set file(xg), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs/*") from ref_index_treatment_ch.collect().combine(ref_fastq_ch).combine(ref_treatment_linear_ch.collect()).view()
 
     output:
     set val(name), file("json/*") into ref_treatment_json_chr
@@ -164,7 +163,7 @@ process alignSampleRef {
     name = fastq.getSimpleName()
     """
     mkdir gam
-    vg map -f $fastq -1 $gbwt -x $xg -g $gcsa -t 40 -u 1 -m 1 > gam/${name}_ref.gam
+    vg map -f $fastq -x $xg -g $gcsa -t 40 -u 1 -m 1 > gam/${name}_ref.gam
 
     mkdir json
     vg view -aj gam/${name}_ref.gam > json/${name}_ref.json
