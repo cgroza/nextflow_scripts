@@ -156,7 +156,7 @@ process alignSampleRef {
     set file(xg), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs/*") from ref_index_treatment_ch.collect().combine(ref_fastq_ch).combine(ref_treatment_linear_ch.collect()).view()
 
     output:
-    set val(name), file("json/*") into ref_treatment_json_chr
+    set val(name), file("json/*") into ref_treatment_json_ch
     set val(name), file("gam/${name}_ref.gam") into ref_treatment_gam_ch
 
     script:
