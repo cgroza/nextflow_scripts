@@ -14,19 +14,19 @@ chromosomes = "chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,ch
 
 Channel.fromPath("${params.pop_graph}/graphs/*.vg").into{linear_vg_ch}
 Channel.fromPath("${params.ref_graph}/graphs/*.vg").into{ref_linear_vg_ch}
-Channel.fromPath("${params.fastq_dir}/*").into{fastq_ch, ref_fastq_ch}
-Channel.fromPath("${params.control_fastq").into{control_fastq_ch, ref_control_ch}
+Channel.fromPath("${params.fastq_dir}/*").into{fastq_ch; ref_fastq_ch}
+Channel.fromPath("${params.control_fastq").into{control_fastq_ch; ref_control_ch}
 
 Channel.fromPath(
     ["${params.ref_graph}/${params.ref_name}.xg",
      "${params.ref_graph}/${params.ref_name}.gcsa",
-     "${params.ref_graph}/${params.ref_name}.gcsa.lcp"]).into{ref_index_treatment_ch, ref_index_control_ch}
+     "${params.ref_graph}/${params.ref_name}.gcsa.lcp"]).into{ref_index_treatment_ch; ref_index_control_ch}
 
 Channel.fromPath(
     ["${params.pop_graph}/${params.pop_name}.xg",
      "${params.pop_graph}/${params.pop_name}.gbwt",
      "${params.pop_graph}/${params.pop_name}.gcsa",
-     "${params.pop_graph}/${params.pop_name}.gcsa.lcp"]).into{pop_index_treatment_ch, pop_index_control_ch}
+     "${params.pop_graph}/${params.pop_name}.gcsa.lcp"]).into{pop_index_treatment_ch; pop_index_control_ch}
 
 
 
