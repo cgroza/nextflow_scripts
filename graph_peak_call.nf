@@ -156,12 +156,11 @@ process alignSampleRef {
     set file(xg), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs/*") from ref_index_treatment_ch.collect().combine(ref_fastq_ch).combine(ref_treatment_linear_ch.collect()).view()
 
     output:
-    set name1, file("json/*") into ref_treatment_json_chr
-    set name2, file "gam/${name}_ref.gam" into ref_treatment_gam_ch
+    set "$name", file("json/*") into ref_treatment_json_chr
+    set "$name", file "gam/${name}_ref.gam" into ref_treatment_gam_ch
 
     script:
-    name1 = fastq.getSimpleName()
-    name2 = fastq.getSimpleName()
+    name = fastq.getSimpleName()
     """
     mkdir gam
     vg map -f $fastq -x $xg -g $gcsa -t 40 -u 1 -m 1 > gam/${name}_ref.gam
@@ -201,12 +200,11 @@ process alignSamplePop {
     set file(xg), file(gbwt), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs/*") from pop_index_treatment_ch.collect().combine(fastq_ch).combine(treatment_linear_ch.collect()).view()
 
     output:
-    set name1, file("json/*") into treatment_json_ch
-    set name2, file("gam/${name}_pop.gam") into treatment_gam_ch
+    set "$name", file("json/*") into treatment_json_ch
+    set "$name", file("gam/${name}_pop.gam") into treatment_gam_ch
 
     script:
-    name1 = fastq.getSimpleName()
-    name2 = fastq.getSimpleName()
+    name = fastq.getSimpleName()
     """
     mkdir gam
     vg map -f $fastq -1 $gbwt -x $xg -g $gcsa -t 40 -u 1 -m 1 > gam/${name}_pop.gam
