@@ -1,9 +1,10 @@
 params.xg = "$workflow.launchDir/EU_AF_index.xg"
 params.gbwt = "$workflow.launchDir/EU_AF_index.gbwt"
 params.gcsa = "$workflow.launchDir/EU_AF_index.gcsa"
+params.bams = "bams/*.bam"
 
-bams = Channel.fromPath("bams/*.bam")
-file("$workflow.launchDir/gams").mkdir()
+bams = Channel.fromPath(params.bams)
+file("gams").mkdir()
 
 process alignFastq {
     time '2d'
