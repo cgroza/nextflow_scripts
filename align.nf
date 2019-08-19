@@ -31,6 +31,6 @@ process alignFastq {
     script:
     bam_name = bam.getSimpleName()
     """
-vg map -k 18 --threads 40 --gcsa-name $gcsa --xg-name $xg --gbwt-name $gbwt -b $bam > ${bam_name}.gam
+vg map -k 18 --threads 40 --gcsa-name index.gcsa --xg-name index.xg --gbwt-name index.gbwt -b $bam > ${bam_name}.gam
 """
 }
