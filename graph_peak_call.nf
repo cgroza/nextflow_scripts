@@ -6,6 +6,10 @@ params.pop_graph = "pop/"
 params.ref_name = "ref"
 params.pop_name = "pop"
 
+params.genome_size = 2480000000
+params.fragment_length = 200
+params.read_length = 36
+
 chromosomes = "chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,chrY"
 
 Channel.fromPath("${params.pop_graph}/graphs/*.vg").into{linear_vg_ch}
