@@ -1,8 +1,9 @@
-params.xg = "$workflow.launchDir/EU_AF_index.xg"
-params.gbwt = "$workflow.launchDir/EU_AF_index.gbwt"
-params.gcsa = "$workflow.launchDir/EU_AF_index.gcsa"
+params.xg = "EU_AF_index.xg"
+params.gbwt = "EU_AF_index.gbwt"
+params.gcsa = "EU_AF_index.gcsa"
 params.bams = "bams/*.bam"
 
+Channel.fromPath(params.xg, params.gbwt, params.gcsa).set{index_ch}
 bams = Channel.fromPath(params.bams)
 file("gams").mkdir()
 
@@ -14,6 +15,7 @@ process alignFastq {
 
     input:
     file bam from bams
+    set file(xg), file(gbwt), file(gcsa) from index_ch
 
     output:
     file "${bam_name}.gam" into aln
@@ -21,6 +23,6 @@ process alignFastq {
     script:
     bam_name = bam.getSimpleName()
     """
-vg map -k 18 --threads 40 --gcsa-name $params.gcsa --xg-name $params.xg --gbwt-name $params.gbwt -b $bam > ${bam_name}.gam
+vg map -k 18 --threads 40 --gcsa-name $gcsa --xg-name $xg --gbwt-name $gbwt -b $bam > ${bam_name}.gam
 """
 }
