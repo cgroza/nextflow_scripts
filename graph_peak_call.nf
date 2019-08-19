@@ -15,7 +15,7 @@ chromosomes = "chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,ch
 Channel.fromPath("${params.pop_graph}/graphs/*.vg").into{linear_vg_ch}
 Channel.fromPath("${params.ref_graph}/graphs/*.vg").into{ref_linear_vg_ch}
 Channel.fromPath("${params.fastq_dir}/*").into{fastq_ch; ref_fastq_ch}
-Channel.fromPath("${params.control_fastq").into{control_fastq_ch; ref_control_ch}
+Channel.fromPath(params.control_fastq).into{control_fastq_ch; ref_control_ch}
 
 Channel.fromPath(
     ["${params.ref_graph}/${params.ref_name}.xg",
