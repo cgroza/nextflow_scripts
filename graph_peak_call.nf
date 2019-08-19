@@ -267,7 +267,7 @@ process callPeaksRef{
     publishDir "$params.outDir", pattern: "ref_${sample}_peaks.narrowPeak"
 
     input:
-    set val(name), file("json/*"), file("control_json/*"), file("graphs/*") from ref_treatment_json_ch.combine(control_json_ch.collect()).combine(ref_peak_linear_ch.collect()).view()
+    set val(name), file("json/*"), file("control_json/*"), file("graphs/*") from ref_treatment_json_ch.combine(ref_control_json_ch.collect()).combine(ref_peak_linear_ch.collect()).view()
 
     output:
     file "ref_${sample}_peaks.narrowPeak"
