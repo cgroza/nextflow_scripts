@@ -14,8 +14,8 @@ chromosomes = "chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,ch
 
 Channel.fromPath("${params.pop_graph}/graphs/*.vg").into{linear_vg_ch}
 Channel.fromPath("${params.ref_graph}/graphs/*.vg").into{ref_linear_vg_ch}
-Channel.fromPath("${params.fastq_dir}/*").into{fastq_ch}
-Channel.fromPath("${params.control_fastq").into{control_fastq_ch}
+Channel.fromPath("${params.fastq_dir}/*").into{fastq_ch, ref_fastq_ch}
+Channel.fromPath("${params.control_fastq").into{control_fastq_ch, ref_control_ch}
 
 Channel.fromPath(
     ["${params.ref_graph}/${params.ref_name}.xg",
@@ -106,9 +106,7 @@ process alignControlRef {
     time '12h'
 
     input:
-    file fastq from control_fastq_ch
-    file xg, gbwt, gcsa, gcsa_lcp from ref_index_control_ch.collect()
-    file "graphs/*" from ref_control_linear_ch
+    set file(xg), file(gbwt), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs/*") from ref_index_control_ch.collect().combine(ref_control_fastq_ch).combine(ref_control_linear_ch)
 
     output:
     file("control_json/*") into ref_control_json_ch
@@ -133,10 +131,7 @@ process alignControlPop {
     time '12h'
 
     input:
-    file fastq from control_fastq_ch
-    file xg, gbwt, gcsa, gcsa_lcp from pop_index_control_ch.collect()
-    file "graphs/*" from control_linear_ch
-
+    set file(xg), file(gbwt), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs/*") from pop_index_control_ch.collect().combine(control_fastq_ch).combine(control_linear_ch)
     output:
     file("control_json/*") into control_json_ch
 
@@ -159,9 +154,7 @@ process alignSampleRef {
     time '12h'
 
     input:
-    file fastq from fastq_ch
-    file xg, gbwt, gcsa, gcsa_lcp from ref_index_control_ch.collect()
-    file "graphs/*" from ref_treatment_linear_ch
+    set file(xg), file(gbwt), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs/*") from ref_index_treatment_ch.collect().combine(ref_fastq_ch).combine(ref_treatment_linear_ch)
 
     output:
     set val(name), file("json/*") into ref_treatment_json_chr
@@ -205,9 +198,7 @@ process alignSamplePop {
     time '12h'
 
     input:
-    file fastq from fastq_ch
-    file xg, gbwt, gcsa, gcsa_lcp from pop_index_control_ch.collect()
-    file "graphs/*" from treatment_linear_ch
+    set file(xg), file(gbwt), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs/*") from pop_index_treatment_ch.collect().combine(fastq_ch).combine(treatment_linear_ch)
 
     output:
     set val(name), file("json/*") into treatment_json_ch
@@ -253,9 +244,7 @@ process callPeaksPop{
     publishDir "$params.outDir", pattern: "ref_${sample}_peaks.narrowPeak"
 
     input:
-    file "graphs/*" from peak_linear_ch
-    set val(name), file("json/*") from treatment_json_ch
-    set val(name), file("control_json/*") from control_json_ch
+    set val(name), file("json/*"), file("control_json/*"), file("graphs/*") from treatment_json_ch.combine(control_json_ch).combine(peak_linear_ch)
 
     output:
     file "ref_${sample}_peaks.narrowPeak"
@@ -279,9 +268,7 @@ process callPeaksRef{
     publishDir "$params.outDir", pattern: "ref_${sample}_peaks.narrowPeak"
 
     input:
-    file "graphs/*" from ref_peak_linear_ch
-    set val(name), file("json/*") from ref_treatment_json_ch
-    set val(name), file("control_json/*") from ref_control_json_ch
+    set val(name), file("json/*"), file("control_json/*"), file("graphs/*") from ref_treatment_json_ch.combine(control_json_ch).combine(ref_peak_linear_ch)
 
     output:
     file "ref_${sample}_peaks.narrowPeak"
