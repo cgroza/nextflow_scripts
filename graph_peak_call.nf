@@ -43,7 +43,7 @@ process vgToJsonPop {
 
     script:
     """
-    (seq 1 22; echo X; echo Y) | parallel -j 24 'vg view -Vj graphs/chr{}.vg > graphs/chr{}.json ; graph_peak_caller create_ob_graph graphs/chr{}.json ; vg stats -r graphs/chr{}.vg  | awk '{print \$2}' > graphs/node_range_chr{}.txt'
+    (seq 1 22; echo X; echo Y) | parallel -j 24 'vg view -Vj graphs/chr{}.vg > graphs/chr{}.json ; graph_peak_caller create_ob_graph graphs/chr{}.json ; vg stats -r graphs/chr{}.vg  | cut -f 2 > graphs/node_range_chr{}.txt'
 """
 }
 
@@ -60,7 +60,7 @@ process vgToJsonRef {
 
     script:
     """
-    (seq 1 22; echo X; echo Y) | parallel -j 24 'vg view -Vj graphs/chr{}.vg > graphs/chr{}.json ; graph_peak_caller create_ob_graph graphs/chr{}.json ; vg stats -r graphs/chr{}.vg  | awk '{print \$2}' > graphs/node_range_chr{}.txt'
+    (seq 1 22; echo X; echo Y) | parallel -j 24 'vg view -Vj graphs/chr{}.vg > graphs/chr{}.json ; graph_peak_caller create_ob_graph graphs/chr{}.json ; vg stats -r graphs/chr{}.vg  | cut -f 2 > graphs/node_range_chr{}.txt'
 """
 }
 
