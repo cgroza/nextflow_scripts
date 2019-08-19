@@ -156,8 +156,8 @@ process alignSampleRef {
     set file(xg), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs/*") from ref_index_treatment_ch.collect().combine(ref_fastq_ch).combine(ref_treatment_linear_ch.collect()).view()
 
     output:
-    set val(fastq.getSimpleName()), file("json/*") into ref_treatment_json_chr
-    set val(fastq.getSimpleName()), file "gam/${name}_ref.gam" into ref_treatment_gam_ch
+    set val(name), file("json/*") into ref_treatment_json_chr
+    set val(name), file("gam/${name}_ref.gam") into ref_treatment_gam_ch
 
     script:
     name = fastq.getSimpleName()
@@ -180,7 +180,7 @@ process sortSampleRef {
     publishDir "$params.outDir", pattern: "ref_${name}.sorted.gam"
 
     input:
-    set name, file(gam) into ref_treatment_gam_ch
+    set val(name), file(gam) into ref_treatment_gam_ch
 
     output:
     file "ref_${name}.sorted.gam"
@@ -200,8 +200,8 @@ process alignSamplePop {
     set file(xg), file(gbwt), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs/*") from pop_index_treatment_ch.collect().combine(fastq_ch).combine(treatment_linear_ch.collect()).view()
 
     output:
-    set val(fastq.getSimpleName()), file("json/*") into treatment_json_ch
-    set val(fastq.getSimpleName()), file("gam/${name}_pop.gam") into treatment_gam_ch
+    set val(name), file("json/*") into treatment_json_ch
+    set val(name), file("gam/${name}_pop.gam") into treatment_gam_ch
 
     script:
     name = fastq.getSimpleName()
@@ -224,7 +224,7 @@ process sortSamplePop {
     publishDir "$params.outDir", pattern: "${name}.sorted.gam"
 
     input:
-    set name, file(gam) into treatment_gam_ch
+    set val(name), file(gam) into treatment_gam_ch
 
     output:
     file "${name}.sorted.gam"
@@ -243,7 +243,7 @@ process callPeaksPop{
     publishDir "$params.outDir", pattern: "ref_${sample}_peaks.narrowPeak"
 
     input:
-    set name, file("json/*"), file("control_json/*"), file("graphs/*") from treatment_json_ch.combine(control_json_ch.collect()).combine(peak_linear_ch.collect()).view()
+    set val(name), file("json/*"), file("control_json/*"), file("graphs/*") from treatment_json_ch.combine(control_json_ch.collect()).combine(peak_linear_ch.collect()).view()
 
     output:
     file "ref_${sample}_peaks.narrowPeak"
@@ -267,7 +267,7 @@ process callPeaksRef{
     publishDir "$params.outDir", pattern: "ref_${sample}_peaks.narrowPeak"
 
     input:
-    set name, file("json/*"), file("control_json/*"), file("graphs/*") from ref_treatment_json_ch.combine(control_json_ch.collect()).combine(ref_peak_linear_ch.collect()).view()
+    set val(name), file("json/*"), file("control_json/*"), file("graphs/*") from ref_treatment_json_ch.combine(control_json_ch.collect()).combine(ref_peak_linear_ch.collect()).view()
 
     output:
     file "ref_${sample}_peaks.narrowPeak"
