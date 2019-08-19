@@ -107,7 +107,7 @@ process alignControlRef {
 
     input:
     file fastq from control_fastq_ch
-    file xg, gbwt, gcsa from ref_index_control_ch.collect()
+    file xg, gbwt, gcsa, gcsa_lcp from ref_index_control_ch.collect()
     file "graphs/*" from ref_control_linear_ch
 
     output:
