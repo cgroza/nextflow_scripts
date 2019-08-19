@@ -3,7 +3,7 @@ params.gbwt = "EU_AF_index.gbwt"
 params.gcsa = "EU_AF_index.gcsa"
 params.bams = "bams/*.bam"
 
-Channel.fromPath(params.xg, params.gbwt, params.gcsa).set{index_ch}
+Channel.fromPath([ params.xg, params.gbwt, params.gcsa ]).set{index_ch}
 bams = Channel.fromPath(params.bams)
 file("gams").mkdir()
 
