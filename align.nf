@@ -1,9 +1,14 @@
 params.xg = "EU_AF_index.xg"
 params.gbwt = "EU_AF_index.gbwt"
 params.gcsa = "EU_AF_index.gcsa"
+params.gcsa_lcp = "${params.gcsa}.lcp"
 params.bams = "bams/*.bam"
 
-Channel.fromPath([ params.xg, params.gbwt, params.gcsa ]).set{index_ch}
+xg_ch = Channel.fromPath(params.xg)
+gbwt_ch = Channel.fromPath(params.gbwt)
+gcsa_ch = Channel.fromPath(params.gcsa)
+gcsa_lcp_ch = Channel.fromPath(params.gcsa_lcp)
+
 bams = Channel.fromPath(params.bams)
 file("gams").mkdir()
 
@@ -15,7 +20,10 @@ process alignFastq {
 
     input:
     file bam from bams
-    set file(xg), file(gbwt), file(gcsa) from index_ch
+    file("index.xg") from xg_ch
+    file("index.gbwt") from gbwt_ch
+    file('index.gcsa') from gcsa_ch
+    file('index.gcsa.lcp') from gcsa_lcp_ch
 
     output:
     file "${bam_name}.gam" into aln
