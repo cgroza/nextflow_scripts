@@ -43,7 +43,7 @@ process vgToJsonPop {
 
     script:
     """
-    (seq 1 22; echo X; echo Y) | parallel -j 6 'vg view -Vj graphs/chr{}.vg > graphs/chr{}.json ; graph_peak_caller create_ob_graph graphs/chr{}.json ; vg stats -r graphs/chr{}.vg  | cut -f 2 > graphs/node_range_chr{}.txt'
+    (seq 1 22; echo X; echo Y) | parallel -j 3 'vg view -Vj graphs/chr{}.vg > graphs/chr{}.json ; graph_peak_caller create_ob_graph graphs/chr{}.json ; vg stats -r graphs/chr{}.vg  | cut -f 2 > graphs/node_range_chr{}.txt'
 """
 }
 
@@ -60,7 +60,7 @@ process vgToJsonRef {
 
     script:
     """
-    (seq 1 22; echo X; echo Y) | parallel -j 6 'vg view -Vj graphs/chr{}.vg > graphs/chr{}.json ; graph_peak_caller create_ob_graph graphs/chr{}.json ; vg stats -r graphs/chr{}.vg  | cut -f 2 > graphs/node_range_chr{}.txt'
+    (seq 1 22; echo X; echo Y) | parallel -j 3 'vg view -Vj graphs/chr{}.vg > graphs/chr{}.json ; graph_peak_caller create_ob_graph graphs/chr{}.json ; vg stats -r graphs/chr{}.vg  | cut -f 2 > graphs/node_range_chr{}.txt'
 """
 }
 
@@ -70,7 +70,7 @@ process linearPathsPop {
     time '12 h'
 
     input:
-    file "graphs/*" from vg2json_ch
+    file "graphs/*" from vg2json_ch.collect()
 
     output:
     file "graphs/*" into control_linear_ch, treatment_linear_ch, peak_linear_ch
@@ -88,7 +88,7 @@ process linearPathsRef {
     time '12 h'
 
     input:
-    file "graphs/*" from ref_vg2json_ch
+    file "graphs/*" from ref_vg2json_ch.collect()
 
     output:
     file "graphs/*" into ref_control_linear_ch, ref_treatment_linear_ch, ref_peak_linear_ch
