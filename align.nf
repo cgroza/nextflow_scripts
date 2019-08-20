@@ -19,7 +19,7 @@ process alignFastq {
     publishDir "$workflow.launchDir/gams"
 
     input:
-    set file("index.xg"), file("index.gbwt"), file('index.gcsa'), file('index.gcsa.lcp'), file(bam) from xg_ch.combine(gbwt_ch, gcsa_ch, gcsa_lcp_ch, bams)
+    set file("index.xg"), file("index.gbwt"), file('index.gcsa'), file('index.gcsa.lcp'), file(bam) from xg_ch.combine(gbwt_ch).combine(gcsa_ch).combine(gcsa_lcp_ch).combine(bams)
 
     output:
     file "${bam_name}.gam" into aln
