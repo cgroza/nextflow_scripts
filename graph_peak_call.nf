@@ -246,7 +246,7 @@ process callPeaksPop{
     set val(name), file("json"), file("control_json"), file("graphs") from treatment_json_ch.combine(control_json_ch.collect()).combine(peak_linear_ch.collect()).view()
 
     output:
-    file "ref_${sample}_peaks.narrowPeak"
+    file "ref_${name}_peaks.narrowPeak"
 
     script:
     """
@@ -270,7 +270,7 @@ process callPeaksRef{
     set val(name), file("json"), file("control_json"), file("graphs") from ref_treatment_json_ch.combine(ref_control_json_ch.collect()).combine(ref_peak_linear_ch.collect()).view()
 
     output:
-    file "ref_${sample}_peaks.narrowPeak"
+    file "ref_${name}_peaks.narrowPeak"
 
     script:
     """
