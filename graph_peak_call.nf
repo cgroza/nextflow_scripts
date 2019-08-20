@@ -43,8 +43,6 @@ process vgToJsonPop {
 
     script:
     """
-    module unload mugqic/python
-    module load python/3.7.0
     (seq 1 22; echo X; echo Y) | parallel -j 24 'vg view -Vj graphs/chr{}.vg > graphs/chr{}.json ; graph_peak_caller create_ob_graph graphs/chr{}.json ; vg stats -r graphs/chr{}.vg  | cut -f 2 > graphs/node_range_chr{}.txt'
 """
 }
@@ -62,8 +60,6 @@ process vgToJsonRef {
 
     script:
     """
-    module unload mugqic/python
-    module load python/3.7.0
     (seq 1 22; echo X; echo Y) | parallel -j 24 'vg view -Vj graphs/chr{}.vg > graphs/chr{}.json ; graph_peak_caller create_ob_graph graphs/chr{}.json ; vg stats -r graphs/chr{}.vg  | cut -f 2 > graphs/node_range_chr{}.txt'
 """
 }
@@ -81,8 +77,6 @@ process linearPathsPop {
 
     script:
     """
-    module unload mugqic/python
-    module load python/3.7.0
     (seq 1 22; echo X; echo Y) | parallel -j 24 graph_peak_caller find_linear_path -g graphs/chr{}.nobg graphs/chr{}.json chr{} graphs/chr{}_linear_pathv2.interval
 """
 }
@@ -101,8 +95,6 @@ process linearPathsRef {
 
     script:
     """
-    module unload mugqic/python
-    module load python/3.7.0
     (seq 1 22; echo X; echo Y) | parallel -j 24 graph_peak_caller find_linear_path -g graphs/chr{}.nobg graphs/chr{}.json chr{} graphs/chr{}_linear_pathv2.interval
 """
 }
@@ -121,8 +113,6 @@ process alignControlRef {
     script:
     name = fastq.getSimpleName()
     """
-    module unload mugqic/python
-    module load python/3.7.0
     mkdir control_gam
     vg map -f $fastq -x $xg -g $gcsa -t 40 -u 1 -m 1 > "control_gam/${name}_ref.gam"
 
@@ -147,8 +137,6 @@ process alignControlPop {
     script:
     name = fastq.getSimpleName()
     """
-    module unload mugqic/python
-    module load python/3.7.0
     mkdir control_gam
     vg map -f $fastq -1 $gbwt -x $xg -g $gcsa -t 40 -u 1 -m 1 > "control_gam/${name}_pop.gam"
 
@@ -174,8 +162,6 @@ process alignSampleRef {
     script:
     name = fastq.getSimpleName()
     """
-    module unload mugqic/python
-    module load python/3.7.0
     mkdir gam
     vg map -f $fastq -x $xg -g $gcsa -t 40 -u 1 -m 1 > gam/${name}_ref.gam
 
@@ -220,8 +206,6 @@ process alignSamplePop {
     script:
     name = fastq.getSimpleName()
     """
-    module unload mugqic/python
-    module load python/3.7.0
     mkdir gam
     vg map -f $fastq -1 $gbwt -x $xg -g $gcsa -t 40 -u 1 -m 1 > gam/${name}_pop.gam
 
@@ -266,8 +250,6 @@ process callPeaksPop{
 
     script:
     """
-    module unload mugqic/python
-    module load python/3.7.0
     graph_peak_caller count_unique_reads ${chromosomes} graphs/ json/${name}_pop | tail -n 1 > counted_unique_reads.txt
     unique_reads=\$(cat counted_unique_reads.txt)
     (seq 1 22; echo X; echo Y) | parallel -j 24 'graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_pop{}.json -c control_json/${name}_pop.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r ${params.read_length} -u \$unique_reads -n chr{}'
@@ -292,8 +274,6 @@ process callPeaksRef{
 
     script:
     """
-    module unload mugqic/python
-    module load python/3.7.0
     graph_peak_caller count_unique_reads ${chromosomes} graphs/ json/${name}_pop | tail -n 1 > counted_unique_reads.txt
     unique_reads=\$(cat counted_unique_reads.txt)
     (seq 1 22; echo X; echo Y) | parallel -j 24 'graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_pop{}.json -c control_json/${name}_pop.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r ${params.read_length} -u \$unique_reads -n chr{}'
