@@ -110,7 +110,7 @@ process alignControlRef {
     set file(xg), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs") from ref_index_control_ch.collect().combine(ref_control_fastq_ch).combine(ref_control_linear_ch.collect())
 
     output:
-    file("control_json") into ref_control_json_ch
+    set val(name), file("control_json") into ref_control_json_ch
 
     script:
     name = fastq.getSimpleName()
@@ -134,7 +134,7 @@ process alignControlPop {
     input:
     set file(xg), file(gbwt), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs") from pop_index_control_ch.collect().combine(control_fastq_ch).combine(control_linear_ch.collect())
     output:
-    file("control_json") into control_json_ch
+    set val(name), file("control_json") into control_json_ch
 
     script:
     name = fastq.getSimpleName()
@@ -242,19 +242,19 @@ process callPeaksPop{
     memory '100 GB'
     time '12h'
 
-    publishDir "$params.outDir", pattern: "ref_${name}_peaks.narrowPeak"
+    publishDir "$params.outDir/peaks", pattern: "${name}_peaks.narrowPeak"
 
     input:
-    set val(name), file("json"), file("control_json"), file("graphs") from treatment_json_ch.combine(control_json_ch.collect()).combine(peak_linear_ch.collect())
+    set val(name), file("json"), val(control_name), file("control_json"), file("graphs") from treatment_json_ch.combine(control_json_ch.collect()).combine(peak_linear_ch.collect())
 
     output:
-    file "ref_${name}_peaks.narrowPeak"
+    set val(name), file("${name}_peaks.narrowPeak") into pop_peaks_ch
 
     script:
     """
-    graph_peak_caller count_unique_reads ${chromosomes} graphs/ json/${name}_pop_ | tail -n 1 > counted_unique_reads.txt
-    unique_reads=\$(cat counted_unique_reads.txt)
-    (seq 1 22; echo X; echo Y) | parallel -j 6 "graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_pop_chr{}.json -c control_json/${name}_pop_chr{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r ${params.read_length} -u \$unique_reads -n chr{}"
+    (seq 1 22; echo X; echo Y) | parallel -j 12 'graph_peak_caller count_unique_reads chr{} graphs/ json/${name}_pop_ | tail -n 1 > counted_unique_reads_chr{}.txt'
+    unique_reads=\$(awk 'BEGIN{i=0}{i = i + \$1}END{print i}' counted_unique_reads_chr*.txt)
+    (seq 1 22; echo X; echo Y) | parallel -j 6 "graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_pop_chr{}.json -c control_json/${control_name}_pop_chr{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r ${params.read_length} -u \$unique_reads -n chr{}"
     rename 'touched' '_touched' *touched*
     rename 'background' '_background' *background*
     rename 'direct' '_direct' *direct*
@@ -272,19 +272,19 @@ process callPeaksRef{
     memory '100 GB'
     time '12h'
 
-    publishDir "$params.outDir", pattern: "ref_${name}_peaks.narrowPeak"
+    publishDir "$params.outDir/peaks", pattern: "ref_${name}_peaks.narrowPeak"
 
     input:
-    set val(name), file("json"), file("control_json"), file("graphs") from ref_treatment_json_ch.combine(ref_control_json_ch.collect()).combine(ref_peak_linear_ch.collect())
+    set val(name), file("json"), val(control_name), file("control_json"), file("graphs") from ref_treatment_json_ch.combine(ref_control_json_ch.collect()).combine(ref_peak_linear_ch.collect())
 
     output:
-    file "ref_${name}_peaks.narrowPeak"
+    set val(name), file("ref_${name}_peaks.narrowPeak") into ref_peaks_ch
 
     script:
     """
-    graph_peak_caller count_unique_reads ${chromosomes} graphs/ json/${name}_ref_ | tail -n 1 > counted_unique_reads.txt
-    unique_reads=\$(cat counted_unique_reads.txt)
-    (seq 1 22; echo X; echo Y) | parallel -j 6 "graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_ref_chr{}.json -c control_json/${name}_ref_chr{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r ${params.read_length} -u \$unique_reads -n chr{}"
+    (seq 1 22; echo X; echo Y) | parallel -j 12 'graph_peak_caller count_unique_reads chr{} graphs/ json/${name}_ref_ | tail -n 1 > counted_unique_reads_chr{}.txt'
+    unique_reads=\$(awk 'BEGIN{i=0}{i = i + \$1}END{print i}' counted_unique_reads_chr*.txt)
+    (seq 1 22; echo X; echo Y) | parallel -j 6 "graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_ref_chr{}.json -c control_json/${control_name}_ref_chr{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r ${params.read_length} -u \$unique_reads -n chr{}"
     rename 'touched' '_touched' *touched*
     rename 'background' '_background' *background*
     rename 'direct' '_direct' *direct*
@@ -295,4 +295,24 @@ process callPeaksRef{
     (seq 1 22; echo X; echo Y) | graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed
     cat *_linear_peaks.bed | sort-bed - > ref_${name}_peaks.narrowPeak
 """
+}
+
+
+process alteredPeaks
+{
+    cpus = 1
+    publishDir "$params.outDir/peaks"
+    input:
+    set val(name), file(pop_peaks) from pop_peaks_ch
+    set val(name), file(ref_peaks) from ref_peaks_ch
+    output:
+    file "*.narrowPeak"
+
+    script:
+    """
+bedtools subtract -a ${pop_peaks} -b ${ref_peaks} > ${name}_pers-only.narrowPeak
+bedtools subtract -b ${pop_peaks} -a ${ref_peaks} > ${name}_ref-only.narrowPeak
+bedtools intersect -wa -A ${pop_peaks} -B ${ref_peaks} > ${name}_intersected.narrowPeak
+"""
+
 }
