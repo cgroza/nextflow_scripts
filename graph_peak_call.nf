@@ -298,8 +298,7 @@ process callPeaksRef{
 }
 
 
-process alteredPeaks
-{
+process alteredPeaks {
     cpus = 1
     publishDir "$params.outDir/peaks"
     input:
