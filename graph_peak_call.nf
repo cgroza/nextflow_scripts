@@ -254,7 +254,7 @@ process callPeaksPop{
     """
     graph_peak_caller count_unique_reads ${chromosomes} graphs/ json/${name}_pop_ | tail -n 1 > counted_unique_reads.txt
     unique_reads=\$(cat counted_unique_reads.txt)
-    (seq 1 22; echo X; echo Y) | parallel -j 6 "graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_pop_{}.json -c control_json/${name}_pop_{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r ${params.read_length} -u \$unique_reads -n chr{}"
+    (seq 1 22; echo X; echo Y) | parallel -j 6 "graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_pop_chr{}.json -c control_json/${name}_pop_chr{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r ${params.read_length} -u \$unique_reads -n chr{}"
     rename 'touched' '_touched' *touched*
     rename 'background' '_background' *background*
     rename 'direct' '_direct' *direct*
@@ -284,7 +284,7 @@ process callPeaksRef{
     """
     graph_peak_caller count_unique_reads ${chromosomes} graphs/ json/${name}_ref_ | tail -n 1 > counted_unique_reads.txt
     unique_reads=\$(cat counted_unique_reads.txt)
-    (seq 1 22; echo X; echo Y) | parallel -j 6 "graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_ref_{}.json -c control_json/${name}_ref_{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r ${params.read_length} -u \$unique_reads -n chr{}"
+    (seq 1 22; echo X; echo Y) | parallel -j 6 "graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_ref_chr{}.json -c control_json/${name}_ref_chr{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r ${params.read_length} -u \$unique_reads -n chr{}"
     rename 'touched' '_touched' *touched*
     rename 'background' '_background' *background*
     rename 'direct' '_direct' *direct*
