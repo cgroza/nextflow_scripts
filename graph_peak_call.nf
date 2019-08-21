@@ -279,6 +279,12 @@ process callPeaksRef{
     graph_peak_caller count_unique_reads ${chromosomes} graphs/ json/${name}_ref_ | tail -n 1 > counted_unique_reads.txt
     unique_reads=\$(cat counted_unique_reads.txt)
     (seq 1 22; echo X; echo Y) | parallel -j 6 "graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_ref{}.json -c control_json/${name}_ref{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r ${params.read_length} -u \$unique_reads -n chr{}"
+    rename 'touched' '_touched' *touched*
+    rename 'background' '_background' *background*
+    rename 'direct' '_direct' *direct*
+    rename 'fragment' '_fragment' *fragment*
+    rename 'pvalues' '_pvalues' *pvalues*
+
     (seq 1 22; echo X; echo Y) | parallel -j 6 'graph_peak_caller callpeaks_whole_genome_from_p_values -d graphs/ -n "" -f ${params.fragment_length} -r ${params.read_length} chr{}'
     (seq 1 22; echo X; echo Y) | graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed
     cat *_linear_peaks.bed | sort-bed - > ref_${name}_peaks.narrowPeak
