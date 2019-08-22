@@ -261,8 +261,8 @@ process callPeaksPop{
     rename 'fragment' '_fragment' *fragment*
     rename 'pvalues' '_pvalues' *pvalues*
 
-    (seq 1 22; echo X; echo Y) | parallel -j 6 'graph_peak_caller callpeaks_whole_genome_from_p_values -d graphs/ -n "" -f ${params.fragment_length} -r ${params.read_length} chr{}'
-    (seq 1 22; echo X; echo Y) | parallel -j 6 'graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed'
+    (seq 1 22; echo X; echo Y) | parallel -j 10 'graph_peak_caller callpeaks_whole_genome_from_p_values -d graphs/ -n "" -f ${params.fragment_length} -r ${params.read_length} chr{}'
+    (seq 1 22; echo X; echo Y) | parallel -j 10 'graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed'
     cat *_linear_peaks.bed | sort-bed - > ${name}_peaks.narrowPeak
 """
 }
@@ -291,8 +291,8 @@ process callPeaksRef{
     rename 'fragment' '_fragment' *fragment*
     rename 'pvalues' '_pvalues' *pvalues*
 
-    (seq 1 22; echo X; echo Y) | parallel -j 6 'graph_peak_caller callpeaks_whole_genome_from_p_values -d graphs/ -n "" -f ${params.fragment_length} -r ${params.read_length} chr{}'
-    (seq 1 22; echo X; echo Y) | graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed
+    (seq 1 22; echo X; echo Y) | parallel -j 10 'graph_peak_caller callpeaks_whole_genome_from_p_values -d graphs/ -n "" -f ${params.fragment_length} -r ${params.read_length} chr{}'
+    (seq 1 22; echo X; echo Y) | parallel -j 10 'graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed'
     cat *_linear_peaks.bed | sort-bed - > ref_${name}_peaks.narrowPeak
 """
 }
