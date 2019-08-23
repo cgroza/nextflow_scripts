@@ -309,8 +309,8 @@ process alteredPeaks {
 
     script:
     """
-bedtools subtract -a ${pop_peaks} -b ${ref_peaks} > ${name}_pers-only.narrowPeak
-bedtools subtract -b ${pop_peaks} -a ${ref_peaks} > ${name}_ref-only.narrowPeak
+bedtools subtract -A -a ${pop_peaks} -b ${ref_peaks} > ${name}_pers-only.narrowPeak
+bedtools subtract -A -b ${pop_peaks} -a ${ref_peaks} > ${name}_ref-only.narrowPeak
 bedtools intersect -wa -A ${pop_peaks} -B ${ref_peaks} > ${name}_intersected.narrowPeak
 """
 
