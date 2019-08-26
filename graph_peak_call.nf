@@ -12,6 +12,8 @@ params.read_length = 36
 params.paired = true
 params.time = '48h'
 params.mem = '100 GB'
+params.sort = false
+params.peak_call = false
 
 params.outDir = workflow.launchDir
 
@@ -181,24 +183,6 @@ process alignSampleRef {
 """
 }
 
-process sortSampleRef {
-    cpus = 40
-    memory '100 GB'
-    time = '12h'
-
-    publishDir "$params.outDir", pattern: "ref_${name}.sorted.gam"
-
-    input:
-    set val(name), file(gam) from ref_treatment_gam_ch
-
-    output:
-    file "ref_${name}.sorted.gam"
-
-    script:
-    """
-    vg gamsort ${gam} -i ${name}.sorted.gam.gai -t 40 > ref_${name}.sorted.gam
-"""
-}
 
 process alignSamplePop {
     cpus = 40
@@ -226,101 +210,124 @@ process alignSamplePop {
 """
 }
 
-process sortSamplePop {
-    cpus = 40
-    memory '100 GB'
-    time '12h'
+if(params.sort) {
+    process sortSampleRef {
+        cpus = 40
+        memory '100 GB'
+        time = '12h'
 
-    publishDir "$params.outDir", pattern: "${name}.sorted.gam"
+        publishDir "$params.outDir", pattern: "ref_${name}.sorted.gam"
 
-    input:
-    set val(name), file(gam) from treatment_gam_ch
+        input:
+        set val(name), file(gam) from ref_treatment_gam_ch
 
-    output:
-    file "${name}.sorted.gam"
+        output:
+        file "ref_${name}.sorted.gam"
 
-    script:
+        script:
+        """
+        vg gamsort ${gam} -i ${name}.sorted.gam.gai -t 40 > ref_${name}.sorted.gam
     """
-    vg gamsort ${gam} -i ${name}.sorted.gam.gai -t 40 > ${name}.sorted.gam
-"""
+    }
+
+    process sortSamplePop {
+        cpus = 40
+        memory '100 GB'
+        time '12h'
+
+        publishDir "$params.outDir", pattern: "${name}.sorted.gam"
+
+        input:
+        set val(name), file(gam) from treatment_gam_ch
+
+        output:
+        file "${name}.sorted.gam"
+
+        script:
+        """
+        vg gamsort ${gam} -i ${name}.sorted.gam.gai -t 40 > ${name}.sorted.gam
+    """
+    }
 }
 
-process callPeaksPop{
-    cpus = 40
-    memory '100 GB'
-    time '12h'
+if(params.peak_call) {
+    process callPeaksPop{
+        cpus = 40
+        memory '100 GB'
+        time '12h'
 
-    publishDir "$params.outDir/peaks", pattern: "${name}_peaks.narrowPeak"
+        publishDir "$params.outDir/peaks", pattern: "${name}_peaks.narrowPeak"
 
-    input:
-    set val(name), file("json"), val(control_name), file("control_json"), file("graphs") from treatment_json_ch.phase(control_json_ch){it.get(0).split('_')[0]}.combine(peak_linear_ch).view()
+        input:
+        set val(name), file("json"), val(control_name), file("control_json"), file("graphs") from treatment_json_ch.phase(control_json_ch){it.get(0).split('_')[0]}.combine(peak_linear_ch).view()
 
-    output:
-    set val(name), file("${name}_peaks.narrowPeak") into pop_peaks_ch
+        output:
+        set val(name), file("${name}_peaks.narrowPeak") into pop_peaks_ch
 
-    script:
+        script:
+        """
+        (seq 1 22; echo X; echo Y) | parallel -j 12 'graph_peak_caller count_unique_reads chr{} graphs/ json/${name}_pop_ | tail -n 1 > counted_unique_reads_chr{}.txt'
+        unique_reads=\$(awk 'BEGIN{i=0}{i = i + \$1}END{print i}' counted_unique_reads_chr*.txt)
+        (seq 1 22; echo X; echo Y) | parallel -j 6 "graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_pop_chr{}.json -c control_json/${control_name}_pop_chr{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r ${params.read_length} -u \$unique_reads -n chr{}"
+        rename 'touched' '_touched' *touched*
+        rename 'background' '_background' *background*
+        rename 'direct' '_direct' *direct*
+        rename 'fragment' '_fragment' *fragment*
+        rename 'pvalues' '_pvalues' *pvalues*
+
+        (seq 1 22; echo X; echo Y) | parallel -j 10 'graph_peak_caller callpeaks_whole_genome_from_p_values -d graphs/ -n "" -f ${params.fragment_length} -r ${params.read_length} chr{}'
+        (seq 1 22; echo X; echo Y) | parallel -j 10 'graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed'
+        cat *_linear_peaks.bed | sort-bed - > ${name}_peaks.narrowPeak
     """
-    (seq 1 22; echo X; echo Y) | parallel -j 12 'graph_peak_caller count_unique_reads chr{} graphs/ json/${name}_pop_ | tail -n 1 > counted_unique_reads_chr{}.txt'
-    unique_reads=\$(awk 'BEGIN{i=0}{i = i + \$1}END{print i}' counted_unique_reads_chr*.txt)
-    (seq 1 22; echo X; echo Y) | parallel -j 6 "graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_pop_chr{}.json -c control_json/${control_name}_pop_chr{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r ${params.read_length} -u \$unique_reads -n chr{}"
-    rename 'touched' '_touched' *touched*
-    rename 'background' '_background' *background*
-    rename 'direct' '_direct' *direct*
-    rename 'fragment' '_fragment' *fragment*
-    rename 'pvalues' '_pvalues' *pvalues*
+    }
 
-    (seq 1 22; echo X; echo Y) | parallel -j 10 'graph_peak_caller callpeaks_whole_genome_from_p_values -d graphs/ -n "" -f ${params.fragment_length} -r ${params.read_length} chr{}'
-    (seq 1 22; echo X; echo Y) | parallel -j 10 'graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed'
-    cat *_linear_peaks.bed | sort-bed - > ${name}_peaks.narrowPeak
-"""
-}
+    process callPeaksRef{
+        cpus = 40
+        memory '100 GB'
+        time '12h'
 
-process callPeaksRef{
-    cpus = 40
-    memory '100 GB'
-    time '12h'
+        publishDir "$params.outDir/peaks", pattern: "ref_${name}_peaks.narrowPeak"
 
-    publishDir "$params.outDir/peaks", pattern: "ref_${name}_peaks.narrowPeak"
+        input:
+        set val(name), file("json"), val(control_name), file("control_json"), file("graphs") from ref_treatment_json_ch.phase(ref_control_json_ch){it.get(0).split('_')[0]}.combine(ref_peak_linear_ch).view()
 
-    input:
-    set val(name), file("json"), val(control_name), file("control_json"), file("graphs") from ref_treatment_json_ch.phase(ref_control_json_ch){it.get(0).split('_')[0]}.combine(ref_peak_linear_ch).view()
+        output:
+        set val(name), file("ref_${name}_peaks.narrowPeak") into ref_peaks_ch
 
-    output:
-    set val(name), file("ref_${name}_peaks.narrowPeak") into ref_peaks_ch
+        script:
+        """
+        (seq 1 22; echo X; echo Y) | parallel -j 12 'graph_peak_caller count_unique_reads chr{} graphs/ json/${name}_ref_ | tail -n 1 > counted_unique_reads_chr{}.txt'
+        unique_reads=\$(awk 'BEGIN{i=0}{i = i + \$1}END{print i}' counted_unique_reads_chr*.txt)
+        (seq 1 22; echo X; echo Y) | parallel -j 6 "graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_ref_chr{}.json -c control_json/${control_name}_ref_chr{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r ${params.read_length} -u \$unique_reads -n chr{}"
+        rename 'touched' '_touched' *touched*
+        rename 'background' '_background' *background*
+        rename 'direct' '_direct' *direct*
+        rename 'fragment' '_fragment' *fragment*
+        rename 'pvalues' '_pvalues' *pvalues*
 
-    script:
+        (seq 1 22; echo X; echo Y) | parallel -j 10 'graph_peak_caller callpeaks_whole_genome_from_p_values -d graphs/ -n "" -f ${params.fragment_length} -r ${params.read_length} chr{}'
+        (seq 1 22; echo X; echo Y) | parallel -j 10 'graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed'
+        cat *_linear_peaks.bed | sort-bed - > ref_${name}_peaks.narrowPeak
     """
-    (seq 1 22; echo X; echo Y) | parallel -j 12 'graph_peak_caller count_unique_reads chr{} graphs/ json/${name}_ref_ | tail -n 1 > counted_unique_reads_chr{}.txt'
-    unique_reads=\$(awk 'BEGIN{i=0}{i = i + \$1}END{print i}' counted_unique_reads_chr*.txt)
-    (seq 1 22; echo X; echo Y) | parallel -j 6 "graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_ref_chr{}.json -c control_json/${control_name}_ref_chr{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r ${params.read_length} -u \$unique_reads -n chr{}"
-    rename 'touched' '_touched' *touched*
-    rename 'background' '_background' *background*
-    rename 'direct' '_direct' *direct*
-    rename 'fragment' '_fragment' *fragment*
-    rename 'pvalues' '_pvalues' *pvalues*
-
-    (seq 1 22; echo X; echo Y) | parallel -j 10 'graph_peak_caller callpeaks_whole_genome_from_p_values -d graphs/ -n "" -f ${params.fragment_length} -r ${params.read_length} chr{}'
-    (seq 1 22; echo X; echo Y) | parallel -j 10 'graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed'
-    cat *_linear_peaks.bed | sort-bed - > ref_${name}_peaks.narrowPeak
-"""
-}
+    }
 
 
-process alteredPeaks {
-    cpus = 1
-    publishDir "$params.outDir/peaks"
-    input:
-    set val(name), file(pop_peaks) from pop_peaks_ch
-    set val(name), file(ref_peaks) from ref_peaks_ch
-    output:
-    file "*.narrowPeak"
+    process alteredPeaks {
+        cpus = 1
+        publishDir "$params.outDir/peaks"
+        input:
+        set val(name), file(pop_peaks) from pop_peaks_ch
+        set val(name), file(ref_peaks) from ref_peaks_ch
+        output:
+        file "*.narrowPeak"
 
-    script:
+        script:
+        """
+    module load bedtools
+    bedtools subtract -A -a ${pop_peaks} -b ${ref_peaks} > ${name}_pers-only.narrowPeak
+    bedtools subtract -A -b ${pop_peaks} -a ${ref_peaks} > ${name}_ref-only.narrowPeak
+    bedtools intersect -wa -a ${pop_peaks} -b ${ref_peaks} > ${name}_intersected.narrowPeak
     """
-module load bedtools
-bedtools subtract -A -a ${pop_peaks} -b ${ref_peaks} > ${name}_pers-only.narrowPeak
-bedtools subtract -A -b ${pop_peaks} -a ${ref_peaks} > ${name}_ref-only.narrowPeak
-bedtools intersect -wa -a ${pop_peaks} -b ${ref_peaks} > ${name}_intersected.narrowPeak
-"""
 
+    }
 }
