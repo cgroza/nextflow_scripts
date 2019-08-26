@@ -6,10 +6,12 @@ params.pop_graph = "pop/"
 params.ref_name = "ref"
 params.pop_name = "pop"
 
-params.genome_size = 2480000000
+params.genome_size = 3100000000
 params.fragment_length = 200
 params.read_length = 36
 params.paired = true
+params.time = '48h'
+params.mem = '100 GB'
 
 params.outDir = workflow.launchDir
 
@@ -108,8 +110,8 @@ process linearPathsRef {
 
 process alignControlRef {
     cpus = 40
-    memory '100 GB'
-    time '12h'
+    memory "${params.mem}"
+    time = "${params.time}"
 
     input:
     set file(xg), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs") from ref_index_control_ch.collect().combine(ref_control_fastq_ch).combine(ref_control_linear_ch)
@@ -133,8 +135,8 @@ process alignControlRef {
 
 process alignControlPop {
     cpus = 40
-    memory '100 GB'
-    time '12h'
+    memory "${params.mem}"
+    time = "${params.time}"
 
     input:
     set file(xg), file(gbwt), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs") from pop_index_control_ch.collect().combine(control_fastq_ch).combine(control_linear_ch)
@@ -156,8 +158,8 @@ process alignControlPop {
 
 process alignSampleRef {
     cpus = 40
-    memory '100 GB'
-    time '12h'
+    memory "${params.mem}"
+    time = "${params.time}"
 
     input:
     set file(xg), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs") from ref_index_treatment_ch.collect().combine(ref_fastq_ch).combine(ref_treatment_linear_ch)
@@ -200,8 +202,8 @@ process sortSampleRef {
 
 process alignSamplePop {
     cpus = 40
-    memory '100 GB'
-    time '12h'
+    memory "${params.mem}"
+    time = "${params.time}"
 
     input:
     set file(xg), file(gbwt), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs") from pop_index_treatment_ch.collect().combine(fastq_ch).combine(treatment_linear_ch)
@@ -227,7 +229,7 @@ process alignSamplePop {
 process sortSamplePop {
     cpus = 40
     memory '100 GB'
-    time = '12h'
+    time '12h'
 
     publishDir "$params.outDir", pattern: "${name}.sorted.gam"
 
