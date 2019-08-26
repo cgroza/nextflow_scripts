@@ -9,6 +9,7 @@ params.pop_name = "pop"
 params.genome_size = 2480000000
 params.fragment_length = 200
 params.read_length = 36
+params.paired = true
 
 params.outDir = workflow.launchDir
 
@@ -31,6 +32,10 @@ Channel.fromPath(
      "${params.pop_graph}/${params.pop_name}.gcsa.lcp"]).into{pop_index_treatment_ch; pop_index_control_ch}
 
 
+vg_flag = ""
+if(params.paired) {
+    vg_flag = "-i ${vg_flag}"
+}
 
 process vgToJsonPop {
     cpus = 40
@@ -116,7 +121,7 @@ process alignControlRef {
     name = fastq.getSimpleName()
     """
     mkdir control_gam
-    vg map -f $fastq -x $xg -g $gcsa -t 40 -u 1 -m 1 > "control_gam/${name}_ref.gam"
+    vg map $vg_flag -f $fastq -x $xg -g $gcsa -t 40 -u 1 -m 1 > "control_gam/${name}_ref.gam"
 
     mkdir control_json
     vg view -aj control_gam/${name}_ref.gam > control_json/${name}_ref.json
@@ -140,7 +145,7 @@ process alignControlPop {
     name = fastq.getSimpleName()
     """
     mkdir control_gam
-    vg map -f $fastq -1 $gbwt -x $xg -g $gcsa -t 40 -u 1 -m 1 > "control_gam/${name}_pop.gam"
+    vg map $vg_flag -f $fastq -1 $gbwt -x $xg -g $gcsa -t 40 -u 1 -m 1 > "control_gam/${name}_pop.gam"
 
     mkdir control_json
     vg view -aj control_gam/${name}_pop.gam > control_json/${name}_pop.json
@@ -165,7 +170,7 @@ process alignSampleRef {
     name = fastq.getSimpleName()
     """
     mkdir gam
-    vg map -f $fastq -x $xg -g $gcsa -t 40 -u 1 -m 1 > gam/${name}_ref.gam
+    vg map $vg_flag -f $fastq -x $xg -g $gcsa -t 40 -u 1 -m 1 > gam/${name}_ref.gam
 
     mkdir json
     vg view -aj gam/${name}_ref.gam > json/${name}_ref.json
@@ -207,9 +212,10 @@ process alignSamplePop {
 
     script:
     name = fastq.getSimpleName()
+
     """
     mkdir gam
-    vg map -f $fastq -1 $gbwt -x $xg -g $gcsa -t 40 -u 1 -m 1 > gam/${name}_pop.gam
+    vg map $vg_flag -f $fastq -1 $gbwt -x $xg -g $gcsa -t 40 -u 1 -m 1 > gam/${name}_pop.gam
 
     mkdir json
     vg view -aj gam/${name}_pop.gam > json/${name}_pop.json
