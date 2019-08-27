@@ -10,7 +10,7 @@ params.genome_size = 3100000000
 params.fragment_length = 200
 params.read_length = 36
 params.paired = true
-params.time = '48h'
+params.time = '60h'
 params.mem = '100 GB'
 params.sort = false
 params.peak_call = false
@@ -43,8 +43,8 @@ if(params.paired) {
 
 process vgToJsonPop {
     cpus = 40
-    memory '100 GB'
-    time '12h'
+    memory '120 GB'
+    time '24h'
 
     input:
     file "graphs/*" from linear_vg_ch.collect()
@@ -60,8 +60,8 @@ process vgToJsonPop {
 
 process vgToJsonRef {
     cpus = 40
-    memory '100 GB'
-    time '12h'
+    memory '120 GB'
+    time '24h'
 
     input:
     file "graphs/*" from ref_linear_vg_ch.collect()
@@ -78,7 +78,7 @@ process vgToJsonRef {
 process linearPathsPop {
     cpus = 40
     memory '100 GB'
-    time '12 h'
+    time '24 h'
 
     input:
     file "graphs/*" from vg2json_ch.collect()
@@ -96,7 +96,7 @@ process linearPathsPop {
 process linearPathsRef {
     cpus = 40
     memory '100 GB'
-    time '12 h'
+    time '24 h'
 
     input:
     file "graphs/*" from ref_vg2json_ch.collect()
