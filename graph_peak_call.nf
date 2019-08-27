@@ -77,7 +77,7 @@ process vgToJsonRef {
 
 process linearPathsPop {
     cpus = 40
-    memory '100 GB'
+    memory '120 GB'
     time '24 h'
 
     input:
@@ -95,7 +95,7 @@ process linearPathsPop {
 
 process linearPathsRef {
     cpus = 40
-    memory '100 GB'
+    memory '120 GB'
     time '24 h'
 
     input:
