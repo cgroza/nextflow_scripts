@@ -14,6 +14,7 @@ params.time = '60h'
 params.mem = '100 GB'
 params.sort = false
 params.peak_call = false
+params.altered = false
 
 params.outDir = workflow.launchDir
 
@@ -311,8 +312,9 @@ if(params.peak_call) {
         cat *_linear_peaks.bed | sort-bed - > ref_${name}_peaks.narrowPeak
     """
     }
+}
 
-
+if(params.altered){
     process alteredPeaks {
         cpus = 1
         publishDir "$params.outDir/peaks"
