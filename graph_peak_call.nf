@@ -72,7 +72,7 @@ process vgToJsonRef {
 
     script:
     """
-    (seq 1 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 'vg view -Vj graphs/chr{}.vg > graphs/chr{}.json ; graph_peak_caller create_ob_graph graphs/chr{}.json ; vg stats -r graphs/chr{}.vg  | cut -f 2 > graphs/node_range_chr{}.txt'
+    (seq 1 22; echo X; echo Y) | parallel -j 3 'vg view -Vj graphs/chr{}.vg > graphs/chr{}.json ; graph_peak_caller create_ob_graph graphs/chr{}.json ; vg stats -r graphs/chr{}.vg  | cut -f 2 > graphs/node_range_chr{}.txt'
 """
 }
 
@@ -107,7 +107,7 @@ process linearPathsRef {
 
     script:
     """
-    (seq 1 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 graph_peak_caller find_linear_path -g graphs/chr{}.nobg graphs/chr{}.json chr{} graphs/chr{}_linear_pathv2.interval
+    (seq 1 22; echo X; echo Y) | parallel -j 3 graph_peak_caller find_linear_path -g graphs/chr{}.nobg graphs/chr{}.json chr{} graphs/chr{}_linear_pathv2.interval
 """
 }
 
