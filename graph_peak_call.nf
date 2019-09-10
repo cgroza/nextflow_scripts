@@ -89,7 +89,9 @@ process linearPathsPop {
 
     script:
     """
-    (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 graph_peak_caller find_linear_path -g graphs/chr{}.nobg graphs/chr{}.json chr{} graphs/chr{}_linear_pathv2.interval
+    (echo 1_1; echo 1_2) | parallel -j 2 graph_peak_caller find_linear_path -g graphs/chr{}.nobg graphs/chr{}.json chr1 graphs/chr{}_linear_pathv2.interval
+    (echo 2_1; echo 2_2) | parallel -j 2 graph_peak_caller find_linear_path -g graphs/chr{}.nobg graphs/chr{}.json chr2 graphs/chr{}_linear_pathv2.interval
+    (seq 3 22; echo X; echo Y;) | parallel -j 3 graph_peak_caller find_linear_path -g graphs/chr{}.nobg graphs/chr{}.json chr{} graphs/chr{}_linear_pathv2.interval
 """
 }
 
