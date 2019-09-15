@@ -319,7 +319,7 @@ if(params.peak_call) {
 if(params.altered){
     process alteredPeaks {
         cpus = 1
-        publishDir "$params.outDir/peaks"
+        publishDir "$params.outDir/peaks", mode: "copy"
         input:
         set val(name), file(pop_peaks) from pop_peaks_ch
         set val(name), file(ref_peaks) from ref_peaks_ch
