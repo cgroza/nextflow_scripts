@@ -270,7 +270,7 @@ if(params.peak_call) {
 
         script:
         """
-        (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 6 'graph_peak_caller count_unique_reads chr{} graphs/ json/${name}_pop_ | tail -n 1 > counted_unique_reads_chr{}.txt'
+        (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 'graph_peak_caller count_unique_reads chr{} graphs/ json/${name}_pop_ | tail -n 1 > counted_unique_reads_chr{}.txt'
         unique_reads=\$(awk 'BEGIN{i=0}{i = i + \$1}END{print i}' counted_unique_reads_chr*.txt)
         (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 6 "graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_pop_chr{}.json -c control_json/${control_name}_pop_chr{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r ${params.read_length} -u \$unique_reads -n chr{}"
         rename 'touched' '_touched' *touched*
@@ -300,7 +300,7 @@ if(params.peak_call) {
 
         script:
         """
-        (seq 1 22; echo X; echo Y) | parallel -j 6 'graph_peak_caller count_unique_reads chr{} graphs/ json/${name}_ref_ | tail -n 1 > counted_unique_reads_chr{}.txt'
+        (seq 1 22; echo X; echo Y) | parallel -j 3 'graph_peak_caller count_unique_reads chr{} graphs/ json/${name}_ref_ | tail -n 1 > counted_unique_reads_chr{}.txt'
         unique_reads=\$(awk 'BEGIN{i=0}{i = i + \$1}END{print i}' counted_unique_reads_chr*.txt)
         (seq 1 22; echo X; echo Y) | parallel -j 6 "graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_ref_chr{}.json -c control_json/${control_name}_ref_chr{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r ${params.read_length} -u \$unique_reads -n chr{}"
         rename 'touched' '_touched' *touched*
