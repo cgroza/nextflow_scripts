@@ -18,7 +18,7 @@ params.altered = false
 
 params.outDir = workflow.launchDir
 
-chromosomes = "chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,chrY"
+chromosomes = "chr1_1,chr1_2,chr2_1,chr2_2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,chrY"
 chromosomes_pop = "chr1_1,chr1_2,chr2_1,chr2_2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,chrY"
 
 Channel.fromPath("${params.pop_graph}/graphs/*.vg").set{linear_vg_ch}
@@ -73,7 +73,7 @@ process vgToJsonRef {
 
     script:
     """
-    (seq 1 22; echo X; echo Y) | parallel -j 3 'vg view -Vj graphs/chr{}.vg > graphs/chr{}.json ; graph_peak_caller create_ob_graph graphs/chr{}.json ; vg stats -r graphs/chr{}.vg  | cut -f 2 > graphs/node_range_chr{}.txt'
+    (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 'vg view -Vj graphs/chr{}.vg > graphs/chr{}.json ; graph_peak_caller create_ob_graph graphs/chr{}.json ; vg stats -r graphs/chr{}.vg  | cut -f 2 > graphs/node_range_chr{}.txt'
 """
 }
 
@@ -90,9 +90,7 @@ process linearPathsPop {
 
     script:
     """
-    (echo 1_1; echo 1_2) | parallel -j 2 graph_peak_caller find_linear_path -g graphs/chr{}.nobg graphs/chr{}.json chr1 graphs/chr{}_linear_pathv2.interval
-    (echo 2_1; echo 2_2) | parallel -j 2 graph_peak_caller find_linear_path -g graphs/chr{}.nobg graphs/chr{}.json chr2 graphs/chr{}_linear_pathv2.interval
-    (seq 3 22; echo X; echo Y;) | parallel -j 3 graph_peak_caller find_linear_path -g graphs/chr{}.nobg graphs/chr{}.json chr{} graphs/chr{}_linear_pathv2.interval
+   (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 graph_peak_caller find_linear_path -g graphs/chr{}.nobg graphs/chr{}.json chr{} graphs/chr{}_linear_pathv2.interval
 """
 }
 
@@ -110,7 +108,7 @@ process linearPathsRef {
 
     script:
     """
-    (seq 1 22; echo X; echo Y) | parallel -j 3 graph_peak_caller find_linear_path -g graphs/chr{}.nobg graphs/chr{}.json chr{} graphs/chr{}_linear_pathv2.interval
+     (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 graph_peak_caller find_linear_path -g graphs/chr{}.nobg graphs/chr{}.json chr{} graphs/chr{}_linear_pathv2.interval
 """
 }
 
@@ -300,17 +298,17 @@ if(params.peak_call) {
 
         script:
         """
-        (seq 1 22; echo X; echo Y) | parallel -j 3 'graph_peak_caller count_unique_reads chr{} graphs/ json/${name}_ref_ | tail -n 1 > counted_unique_reads_chr{}.txt'
+        (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 'graph_peak_caller count_unique_reads chr{} graphs/ json/${name}_ref_ | tail -n 1 > counted_unique_reads_chr{}.txt'
         unique_reads=\$(awk 'BEGIN{i=0}{i = i + \$1}END{print i}' counted_unique_reads_chr*.txt)
-        (seq 1 22; echo X; echo Y) | parallel -j 6 "graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_ref_chr{}.json -c control_json/${control_name}_ref_chr{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r ${params.read_length} -u \$unique_reads -n chr{}"
+        (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 6 "graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_ref_chr{}.json -c control_json/${control_name}_ref_chr{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r ${params.read_length} -u \$unique_reads -n chr{}"
         rename 'touched' '_touched' *touched*
         rename 'background' '_background' *background*
         rename 'direct' '_direct' *direct*
         rename 'fragment' '_fragment' *fragment*
         rename 'pvalues' '_pvalues' *pvalues*
 
-        (seq 1 22; echo X; echo Y) | parallel -j 6 'graph_peak_caller callpeaks_whole_genome_from_p_values -d graphs/ -n "" -f ${params.fragment_length} -r ${params.read_length} chr{}'
-        (seq 1 22; echo X; echo Y) | parallel -j 6 'graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed'
+        (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 6 'graph_peak_caller callpeaks_whole_genome_from_p_values -d graphs/ -n "" -f ${params.fragment_length} -r ${params.read_length} chr{}'
+        (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 6 'graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed'
         cat *_linear_peaks.bed | sort-bed - > ref_${name}_peaks.narrowPeak
     """
     }
