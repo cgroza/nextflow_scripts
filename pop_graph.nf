@@ -6,7 +6,7 @@ params.vcf = "$params.outdir/renamed_Epi_EU_AF_phased.vcf.gz"
 Channel.fromPath(params.vcf).into{vcf_con_ch; vcf_gbwt_ch}
 
 process makeVg {
-    time '6h'
+    time '12h'
     memory '100 GB'
     cpus 6
 
@@ -35,7 +35,7 @@ vg ids -m mapping -j \$(for i in \$(echo 1_1; echo 1_2; echo 2_1; echo 2_2; seq 
 
 process indexGBWT_XG {
     cpus 40
-    time '1d'
+    time '2d'
     memory '150 GB'
     publishDir "$params.outdir", mode: 'copy', pattern: "${params.genome}_index.gbwt"
     publishDir "$params.outdir", mode: 'copy', pattern: "${params.genome}_index.xg"
