@@ -258,7 +258,7 @@ if(params.peak_call) {
         memory '120 GB'
         time '24h'
 
-        publishDir "$params.outDir/peaks", pattern: "${name}_peaks.narrowPeak"
+        publishDir "$params.outDir/peaks", pattern: "${name}_peaks.narrowPeak", mode: "copy"
 
         input:
         set val(name), file("json"), val(control_name), file("control_json"), file("graphs") from treatment_json_ch.phase(control_json_ch){it.get(0).split('_')[0]}.combine(peak_linear_ch).map{ it.flatten()}.view()
