@@ -13,7 +13,7 @@ params.paired = true
 params.time = '60h'
 params.mem = '100 GB'
 params.sort = false
-params.peak_call = false
+params.peak_call = true
 params.altered = false
 
 params.outDir = workflow.launchDir
