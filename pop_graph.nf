@@ -28,7 +28,7 @@ tabix -p vcf $vcf
 (echo 1_1; echo 1_2; echo 2_1; echo 2_2; seq 3 22; echo X; echo Y) | parallel -j 24 "tabix -h $vcf chr{} > chr{}.vcf ; bgzip chr{}.vcf ; tabix chr{}.vcf.gz"
 
 mkdir graphs
-(echo 1_1; echo 1_2; echo 2_1; echo 2_2; seq 3 22; echo X; echo Y) | parallel -j 6  "vg construct -a -p -C -R chr{} -v chr{}.vcf.gz -r $params.ref -t 1 -m 32 > graphs/chr{}.vg"
+(echo 1_1; echo 1_2; echo 2_1; echo 2_2; seq 3 22; echo X; echo Y) | parallel -j 6  "vg construct -S -a -p -C -R chr{} -v chr{}.vcf.gz -r $params.ref -t 1 -m 32 > graphs/chr{}.vg"
 vg ids -m mapping -j \$(for i in \$(echo 1_1; echo 1_2; echo 2_1; echo 2_2; seq 3 22; echo X; echo Y); do echo graphs/chr\$i.vg; done)
 """
 }
