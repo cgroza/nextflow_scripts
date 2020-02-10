@@ -20,21 +20,27 @@ chromosomes = "chr1_1,chr1_2,chr2_1,chr2_2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,ch
 chromosomes_pop = "chr1_1,chr1_2,chr2_1,chr2_2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,chrY"
 
 def design_file = new File(params.design_file)
-design = [:]
+def design = [:]
+
+Set treatments = []
+Set controls = []
 
 design_file.eachLine {String entry ->
     def (treatment, control) = entry.split()
+    controls.add(control)
+    treatments.add(treatment)
     // the design mapping outputs the control for each treatment
     design[treatment] = control
     // the design mapping is identity for control
     design[control] = control
 }
 
+println(design)
 
 Channel.fromPath("${params.pop_graph}/graphs/*.vg").set{linear_vg_ch}
 Channel.fromPath("${params.ref_graph}/graphs/*.vg").set{ref_linear_vg_ch}
-Channel.from(design.keySet()).into{fastq_ch; ref_fastq_ch}
-Channel.from(design.values()).into{control_fastq_ch; ref_control_fastq_ch}
+Channel.from(treatments).into{fastq_ch; ref_fastq_ch}
+Channel.from(controls).into{control_fastq_ch; ref_control_fastq_ch}
 
 Channel.fromPath(
     ["${params.ref_graph}/${params.ref_name}.xg",
