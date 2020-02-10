@@ -1,6 +1,4 @@
-params.fastq_dir = "fastq"
-params.control_fastq_dir = "control_fastq"
-
+params.design_file = "design.tsv"
 params.ref_graph = "ref/"
 params.pop_graph = "pop/"
 params.ref_name = "ref"
@@ -21,10 +19,22 @@ params.outDir = workflow.launchDir
 chromosomes = "chr1_1,chr1_2,chr2_1,chr2_2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,chrY"
 chromosomes_pop = "chr1_1,chr1_2,chr2_1,chr2_2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,chrY"
 
+def design_file = new File(params.design_file)
+design = [:]
+
+design_file.eachLine {String entry ->
+    def (treatment, control) = entry.split()
+    // the design mapping outputs the control for each treatment
+    design[treatment] = control
+    // the design mapping is identity for control
+    design[control] = control
+}
+
+
 Channel.fromPath("${params.pop_graph}/graphs/*.vg").set{linear_vg_ch}
 Channel.fromPath("${params.ref_graph}/graphs/*.vg").set{ref_linear_vg_ch}
-Channel.fromPath("${params.fastq_dir}/*").into{fastq_ch; ref_fastq_ch}
-Channel.fromPath("${params.control_fastq_dir}/*").into{control_fastq_ch; ref_control_fastq_ch}
+Channel.from(design.keySet()).into{fastq_ch; ref_fastq_ch}
+Channel.from(design.values()).into{control_fastq_ch; ref_control_fastq_ch}
 
 Channel.fromPath(
     ["${params.ref_graph}/${params.ref_name}.xg",
@@ -121,7 +131,7 @@ process alignControlRef {
     set file(xg), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs") from ref_index_control_ch.collect().combine(ref_control_fastq_ch).combine(ref_control_linear_ch)
 
     output:
-    set val(name), file("control_json") into ref_control_json_ch
+    set val(fastq), file("control_json") into ref_control_json_ch
 
     script:
     name = fastq.getSimpleName()
@@ -145,7 +155,7 @@ process alignControlPop {
     input:
     set file(xg), file(gbwt), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs") from pop_index_control_ch.collect().combine(control_fastq_ch).combine(control_linear_ch)
     output:
-    set val(name), file("control_json") into control_json_ch
+    set val(fastq), file("control_json") into control_json_ch
 
     script:
     name = fastq.getSimpleName()
@@ -169,8 +179,8 @@ process alignSampleRef {
     set file(xg), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs") from ref_index_treatment_ch.collect().combine(ref_fastq_ch).combine(ref_treatment_linear_ch)
 
     output:
-    set val(name), file("json") into ref_treatment_json_ch
-    set val(name), file("gam/${name}_ref.gam") into ref_treatment_gam_ch
+    set val(fastq), file("json") into ref_treatment_json_ch
+    file("gam/${name}_ref.gam") into ref_treatment_gam_ch
 
     script:
     name = fastq.getSimpleName()
@@ -195,8 +205,8 @@ process alignSamplePop {
     set file(xg), file(gbwt), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs") from pop_index_treatment_ch.collect().combine(fastq_ch).combine(treatment_linear_ch)
 
     output:
-    set val(name), file("json") into treatment_json_ch
-    set val(name), file("gam/${name}_pop.gam") into treatment_gam_ch
+    set val(fastq), file("json") into treatment_json_ch
+    file("gam/${name}_pop.gam") into treatment_gam_ch
 
     script:
     name = fastq.getSimpleName()
@@ -221,12 +231,12 @@ if(params.sort) {
         publishDir "$params.outDir", pattern: "ref_${name}.sorted.gam"
 
         input:
-        set val(name), file(gam) from ref_treatment_gam_ch
+        file(gam) from ref_treatment_gam_ch
 
         output:
         file "ref_${name}.sorted.gam"
-
         script:
+        name = gam.getSimpleName()
         """
         vg gamsort ${gam} -i ${name}.sorted.gam.gai -t 40 > ref_${name}.sorted.gam
     """
@@ -240,12 +250,12 @@ if(params.sort) {
         publishDir "$params.outDir", pattern: "${name}.sorted.gam"
 
         input:
-        set val(name), file(gam) from treatment_gam_ch
+        file(gam) from treatment_gam_ch
 
         output:
         file "${name}.sorted.gam"
-
         script:
+        name = gam.getSimpleName()
         """
         vg gamsort ${gam} -i ${name}.sorted.gam.gai -t 40 > ${name}.sorted.gam
     """
@@ -261,12 +271,13 @@ if(params.peak_call) {
         publishDir "$params.outDir/peaks", pattern: "${name}_peaks.narrowPeak", mode: "copy"
 
         input:
-        set val(name), file("json"), val(control_name), file("control_json"), file("graphs") from treatment_json_ch.phase(control_json_ch){it.get(0).split('_')[0]}.combine(peak_linear_ch).map{ it.flatten()}.view()
+        set file(fastq), file("json"), val(control_name), file("control_json"), file("graphs") from treatment_json_ch.phase(control_json_ch){design[it.get(0)]}.combine(peak_linear_ch).map{ it.flatten()}.view()
 
         output:
         set val(name), file("${name}_peaks.narrowPeak") into pop_peaks_ch
 
         script:
+        name = fastq.getSimpleName()
         """
         (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 'graph_peak_caller count_unique_reads chr{} graphs/ json/${name}_pop_ | tail -n 1 > counted_unique_reads_chr{}.txt'
         unique_reads=\$(awk 'BEGIN{i=0}{i = i + \$1}END{print i}' counted_unique_reads_chr*.txt)
@@ -291,12 +302,13 @@ if(params.peak_call) {
         publishDir "$params.outDir/peaks", pattern: "ref_${name}_peaks.narrowPeak", mode: "copy"
 
         input:
-        set val(name), file("json"), val(control_name), file("control_json"), file("graphs") from ref_treatment_json_ch.phase(ref_control_json_ch){it.get(0).split('_')[0]}.combine(ref_peak_linear_ch).map{ it.flatten()}.view()
+        set file(fastq), file("json"), val(control_name), file("control_json"), file("graphs") from ref_treatment_json_ch.phase(ref_control_json_ch){design[it.get(0)]}.combine(ref_peak_linear_ch).map{ it.flatten()}.view()
 
         output:
         set val(name), file("ref_${name}_peaks.narrowPeak") into ref_peaks_ch
 
         script:
+        name = fastq.getSimpleName()
         """
         (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 'graph_peak_caller count_unique_reads chr{} graphs/ json/${name}_ref_ | tail -n 1 > counted_unique_reads_chr{}.txt'
         unique_reads=\$(awk 'BEGIN{i=0}{i = i + \$1}END{print i}' counted_unique_reads_chr*.txt)
