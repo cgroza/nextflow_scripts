@@ -133,7 +133,7 @@ process alignControlRef {
     time = "${params.time}"
 
     input:
-    set file(xg), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs") from ref_index_control_ch.collect().combine(ref_control_fastq_ch).combine(ref_control_linear_ch)
+    set file(xg), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs") from ref_index_control_ch.collect().combine(ref_control_fastq_ch).combine(ref_control_linear_ch).view()
 
     output:
     set file(fastq), file("control_json") into ref_control_json_ch
@@ -158,7 +158,7 @@ process alignControlPop {
     time = "${params.time}"
 
     input:
-    set file(xg), file(gbwt), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs") from pop_index_control_ch.collect().combine(control_fastq_ch).combine(control_linear_ch)
+    set file(xg), file(gbwt), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs") from pop_index_control_ch.collect().combine(control_fastq_ch).combine(control_linear_ch).view()
     output:
     set file(fastq), file("control_json") into control_json_ch
 
@@ -181,7 +181,7 @@ process alignSampleRef {
     time = "${params.time}"
 
     input:
-    set file(xg), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs") from ref_index_treatment_ch.collect().combine(ref_fastq_ch).combine(ref_treatment_linear_ch)
+    set file(xg), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs") from ref_index_treatment_ch.collect().combine(ref_fastq_ch).combine(ref_treatment_linear_ch).view()
 
     output:
     set file(fastq), file("json") into ref_treatment_json_ch
@@ -207,7 +207,7 @@ process alignSamplePop {
     time = "${params.time}"
 
     input:
-    set file(xg), file(gbwt), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs") from pop_index_treatment_ch.collect().combine(fastq_ch).combine(treatment_linear_ch)
+    set file(xg), file(gbwt), file(gcsa), file(gcsa_lcp), file(fastq), file("graphs") from pop_index_treatment_ch.collect().combine(fastq_ch).combine(treatment_linear_ch).view()
 
     output:
     set file(fastq), file("json") into treatment_json_ch
