@@ -6,7 +6,6 @@ params.pop_name = "pop"
 
 params.genome_size = 3100000000
 params.fragment_length = 200
-params.read_length = 95
 params.paired = true
 params.time = '60h'
 params.mem = '100 GB'
