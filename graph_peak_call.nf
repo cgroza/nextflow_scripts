@@ -26,12 +26,15 @@ def controls = []
 
 design_file.eachLine {String entry ->
     def (treatment, control) = entry.split()
+    treatment_name = (new File(treatment)).getName();
+    control_name = (new File(control)).getName();
+
     controls.add(control)
     treatments.add(treatment)
     // the design mapping outputs the control for each treatment
-    design[treatment] = control
+    design[treatment_name] = control_name
     // the design mapping is identity for control
-    design[control] = control
+    design[control_name] = control_name
 }
 
 Channel.fromPath("${params.pop_graph}/graphs/*.vg").set{linear_vg_ch}
@@ -283,7 +286,7 @@ if(params.peak_call) {
         publishDir "$params.outDir/peaks", pattern: "${name}_peaks.narrowPeak", mode: "copy"
 
         input:
-        set file(fastq), file("json"), val(control_name), file("control_json"), file("graphs") from treatment_json_ch.phase(control_json_ch){design[it.get(0)]}.combine(peak_linear_ch).map{ it.flatten()}.view()
+        set file(fastq), file("json"), val(control_name), file("control_json"), file("graphs") from treatment_json_ch.phase(control_json_ch){design[it.get(0).getName()]}.combine(peak_linear_ch).map{ it.flatten()}.view()
 
         output:
         set val(name), file("${name}_peaks.narrowPeak") into pop_peaks_ch
@@ -315,7 +318,7 @@ if(params.peak_call) {
         publishDir "$params.outDir/peaks", pattern: "ref_${name}_peaks.narrowPeak", mode: "copy"
 
         input:
-        set file(fastq), file("json"), val(control_name), file("control_json"), file("graphs") from ref_treatment_json_ch.phase(ref_control_json_ch){design[it.get(0)]}.combine(ref_peak_linear_ch).map{ it.flatten()}.view()
+        set file(fastq), file("json"), val(control_name), file("control_json"), file("graphs") from ref_treatment_json_ch.phase(ref_control_json_ch){design[it.get(0).getName()]}.combine(ref_peak_linear_ch).map{ it.flatten()}.view()
 
         output:
         set val(name), file("ref_${name}_peaks.narrowPeak") into ref_peaks_ch
