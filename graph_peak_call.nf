@@ -36,8 +36,8 @@ design_file.eachLine {String entry ->
 
 Channel.fromPath("${params.pop_graph}/graphs/*.vg").set{linear_vg_ch}
 Channel.fromPath("${params.ref_graph}/graphs/*.vg").set{ref_linear_vg_ch}
-Channel.from(treatments).unique().into{fastq_ch; ref_fastq_ch}
-Channel.from(controls).unique().into{control_fastq_ch; ref_control_fastq_ch}
+Channel.fromPath(treatments).unique().into{fastq_ch; ref_fastq_ch}
+Channel.fromPath(controls).unique().into{control_fastq_ch; ref_control_fastq_ch}
 
 println("Treatments:")
 treatments
