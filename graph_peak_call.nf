@@ -35,16 +35,16 @@ design_file.eachLine {String entry ->
 }
 
 println("Treatments:")
-print(treatments)
+println(treatments)
 println("Controls:")
-print(controls)
+println(controls)
 println("Treatment/control associations:")
 println(design)
 
 Channel.fromPath("${params.pop_graph}/graphs/*.vg").set{linear_vg_ch}
 Channel.fromPath("${params.ref_graph}/graphs/*.vg").set{ref_linear_vg_ch}
-Channel.fromPath(treatments).into{fastq_ch; ref_fastq_ch}
-Channel.fromPath(controls).into{control_fastq_ch; ref_control_fastq_ch}
+Channel.fromPath(treatments.toArray()).into{fastq_ch; ref_fastq_ch}
+Channel.fromPath(controls.toArray()).into{control_fastq_ch; ref_control_fastq_ch}
 
 Channel.fromPath(
     ["${params.ref_graph}/${params.ref_name}.xg",
