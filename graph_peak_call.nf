@@ -40,9 +40,9 @@ Channel.fromPath(treatments).unique().into{fastq_ch; ref_fastq_ch}
 Channel.fromPath(controls).unique().into{control_fastq_ch; ref_control_fastq_ch}
 
 println("Treatments:")
-treatments
+println(treatments)
 println("Controls:")
-controls
+println(controls)
 
 println("Treatment/control associations:")
 println(design)
