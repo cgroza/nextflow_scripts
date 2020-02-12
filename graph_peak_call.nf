@@ -35,7 +35,7 @@ design_file.eachLine {String entry ->
 }
 
 println("Treatments:")
-print(treatmens)
+print(treatments)
 println("Controls:")
 print(controls)
 println("Treatment/control associations:")
