@@ -286,7 +286,7 @@ if(params.peak_call) {
         publishDir "$params.outDir/peaks", pattern: "${name}_peaks.narrowPeak", mode: "copy"
 
         input:
-        set file(fastq), file("json"), val(control_name), file("control_json"), file("graphs") from treatment_json_ch.phase(control_json_ch){design[it.get(0).getName()]}.combine(peak_linear_ch).map{ it.flatten()}.view()
+        set file(fastq), file("json"), val(control_name), file("control_json"), file("graphs") from treatment_json_ch.combine(control_json_ch)filter({design[it.get(0).getName()] == design[it.get(0).getName()]}).combine(peak_linear_ch).map{ it.flatten()}.view()
 
         output:
         set val(name), file("${name}_peaks.narrowPeak") into pop_peaks_ch
@@ -318,7 +318,7 @@ if(params.peak_call) {
         publishDir "$params.outDir/peaks", pattern: "ref_${name}_peaks.narrowPeak", mode: "copy"
 
         input:
-        set file(fastq), file("json"), val(control_name), file("control_json"), file("graphs") from ref_treatment_json_ch.phase(ref_control_json_ch){design[it.get(0).getName()]}.combine(ref_peak_linear_ch).map{ it.flatten()}.view()
+        set file(fastq), file("json"), val(control_name), file("control_json"), file("graphs") from ref_treatment_json_ch.combine(ref_control_json_ch).filter({design[it.get(0).getName()] == design[it.get(1).getName()]}).combine(ref_peak_linear_ch).map{ it.flatten()}.view()
 
         output:
         set val(name), file("ref_${name}_peaks.narrowPeak") into ref_peaks_ch
