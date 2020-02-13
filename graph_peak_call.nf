@@ -286,7 +286,7 @@ if(params.peak_call) {
         publishDir "$params.outDir/peaks", pattern: "${name}_peaks.narrowPeak", mode: "copy"
 
         input:
-        set file(fastq), file("json"), val(control_name), file("control_json"), file("graphs") from treatment_json_ch.combine(control_json_ch)filter{design[it.get(0).getName()] == design[it.get(1).getName()]}.combine(peak_linear_ch).map{ it.flatten()}.view()
+        set file(fastq), file("json"), val(control_name), file("control_json"), file("graphs") from treatment_json_ch.combine(control_json_ch).filter{design[it.get(0).getName()] == design[it.get(1).getName()]}.combine(peak_linear_ch).map{ it.flatten()}.view()
 
         output:
         set val(name), file("${name}_peaks.narrowPeak") into pop_peaks_ch
