@@ -235,6 +235,8 @@ process alignSamplePop {
     rm json/${name}_pop.json
 """
 }
+treatment_json_ch.subscribe{ println("Sample pop output: $it") }
+control_json_ch.subscribe{ println("Sample pop output: $it") }
 
 if(params.sort) {
     process sortSampleRef {
@@ -308,7 +310,6 @@ if(params.peak_call) {
         cat *_linear_peaks.bed | sort-bed - > ${name}_peaks.narrowPeak
     """
     }
-
     process callPeaksRef{
         cpus = 40
         memory '120 GB'
