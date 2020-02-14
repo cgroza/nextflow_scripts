@@ -236,131 +236,131 @@ process alignSamplePop {
 """
 }
 
-treatment_json_ch.subscribe{ println("Sample pop output: $it") }
-control_json_ch.subscribe{ println("Control pop output: $it") }
+if(params.sort) {
+    process sortSampleRef {
+        cpus = 40
+        memory '100 GB'
+        time = '12h'
 
-// if(params.sort) {
-//     process sortSampleRef {
-//         cpus = 40
-//         memory '100 GB'
-//         time = '12h'
+        publishDir "$params.outDir", pattern: "ref_${name}.sorted.gam"
 
-//         publishDir "$params.outDir", pattern: "ref_${name}.sorted.gam"
+        input:
+        file(gam) from ref_treatment_gam_ch
 
-//         input:
-//         file(gam) from ref_treatment_gam_ch
+        output:
+        file "ref_${name}.sorted.gam"
+        script:
+        name = gam.getSimpleName()
+        """
+        vg gamsort ${gam} -i ${name}.sorted.gam.gai -t 40 > ref_${name}.sorted.gam
+    """
+    }
 
-//         output:
-//         file "ref_${name}.sorted.gam"
-//         script:
-//         name = gam.getSimpleName()
-//         """
-//         vg gamsort ${gam} -i ${name}.sorted.gam.gai -t 40 > ref_${name}.sorted.gam
-//     """
-//     }
+    process sortSamplePop {
+        cpus = 40
+        memory '100 GB'
+        time '12h'
 
-//     process sortSamplePop {
-//         cpus = 40
-//         memory '100 GB'
-//         time '12h'
+        publishDir "$params.outDir", pattern: "${name}.sorted.gam"
 
-//         publishDir "$params.outDir", pattern: "${name}.sorted.gam"
+        input:
+        file(gam) from treatment_gam_ch
 
-//         input:
-//         file(gam) from treatment_gam_ch
+        output:
+        file "${name}.sorted.gam"
+        script:
+        name = gam.getSimpleName()
+        """
+        vg gamsort ${gam} -i ${name}.sorted.gam.gai -t 40 > ${name}.sorted.gam
+    """
+    }
+}
 
-//         output:
-//         file "${name}.sorted.gam"
-//         script:
-//         name = gam.getSimpleName()
-//         """
-//         vg gamsort ${gam} -i ${name}.sorted.gam.gai -t 40 > ${name}.sorted.gam
-//     """
-//     }
-// }
+if(params.peak_call) {
+    process callPeaksPop{
+        cpus = 40
+        memory '120 GB'
+        time '24h'
 
-// if(params.peak_call) {
-//     process callPeaksPop{
-//         cpus = 40
-//         memory '120 GB'
-//         time '24h'
+        publishDir "$params.outDir/peaks", pattern: "${name}_peaks.narrowPeak", mode: "copy"
 
-//         publishDir "$params.outDir/peaks", pattern: "${name}_peaks.narrowPeak", mode: "copy"
+        input:
+        set file(fastq), file("json"), file(control_fastq), file("control_json"), file("graphs") from treatment_json_ch.combine(control_json_ch).filter{design[it.get(0).getName()] == design[it.get(2).getName()]}.combine(peak_linear_ch).map{ it.flatten()}.view()
 
-//         input:
-//         set file(fastq), file("json"), val(control_name), file("control_json"), file("graphs") from treatment_json_ch.combine(control_json_ch).filter{design[it.get(0).getName()] == design[it.get(1).getName()]}.combine(peak_linear_ch).map{ it.flatten()}.view()
+        output:
+        set val(name), file("${name}_peaks.narrowPeak") into pop_peaks_ch
 
-//         output:
-//         set val(name), file("${name}_peaks.narrowPeak") into pop_peaks_ch
+        script:
+        name = fastq.getSimpleName()
+        control_name = control_fastq.getSimpleName()
 
-//         script:
-//         name = fastq.getSimpleName()
-//         """
-//         (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 'graph_peak_caller count_unique_reads chr{} graphs/ json/${name}_pop_ | tail -n 1 > counted_unique_reads_chr{}.txt'
-//         read_length=\$(zcat $fastq | head -2 | tail -1 | wc -c)
-//         unique_reads=\$(awk 'BEGIN{i=0}{i = i + \$1}END{print i}' counted_unique_reads_chr*.txt)
-//         (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 "graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_pop_chr{}.json -c control_json/${control_name}_pop_chr{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r \$read_length -u \$unique_reads -n chr{}"
-//         rename 'touched' '_touched' *touched*
-//         rename 'background' '_background' *background*
-//         rename 'direct' '_direct' *direct*
-//         rename 'fragment' '_fragment' *fragment*
-//         rename 'pvalues' '_pvalues' *pvalues*
+        """
+        (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 'graph_peak_caller count_unique_reads chr{} graphs/ json/${name}_pop_ | tail -n 1 > counted_unique_reads_chr{}.txt'
+        read_length=\$(zcat $fastq | head -2 | tail -1 | wc -c)
+        unique_reads=\$(awk 'BEGIN{i=0}{i = i + \$1}END{print i}' counted_unique_reads_chr*.txt)
+        (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 "graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_pop_chr{}.json -c control_json/${control_name}_pop_chr{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r \$read_length -u \$unique_reads -n chr{}"
+        rename 'touched' '_touched' *touched*
+        rename 'background' '_background' *background*
+        rename 'direct' '_direct' *direct*
+        rename 'fragment' '_fragment' *fragment*
+        rename 'pvalues' '_pvalues' *pvalues*
 
-//         (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 'graph_peak_caller callpeaks_whole_genome_from_p_values -d graphs/ -n "" -f ${params.fragment_length} -r \$read_length chr{}'
-//         (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 'graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed'
-//         cat *_linear_peaks.bed | sort-bed - > ${name}_peaks.narrowPeak
-//     """
-//     }
-//     process callPeaksRef{
-//         cpus = 40
-//         memory '120 GB'
-//         time '24h'
+        (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 'graph_peak_caller callpeaks_whole_genome_from_p_values -d graphs/ -n "" -f ${params.fragment_length} -r \$read_length chr{}'
+        (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 'graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed'
+        cat *_linear_peaks.bed | sort-bed - > ${name}_peaks.narrowPeak
+    """
+    }
+    process callPeaksRef{
+        cpus = 40
+        memory '120 GB'
+        time '24h'
 
-//         publishDir "$params.outDir/peaks", pattern: "ref_${name}_peaks.narrowPeak", mode: "copy"
+        publishDir "$params.outDir/peaks", pattern: "ref_${name}_peaks.narrowPeak", mode: "copy"
 
-//         input:
-//         set file(fastq), file("json"), val(control_name), file("control_json"), file("graphs") from ref_treatment_json_ch.combine(ref_control_json_ch).filter{design[it.get(0).getName()] == design[it.get(1).getName()]}.combine(ref_peak_linear_ch).map{ it.flatten()}.view()
+        input:
+        set file(fastq), file("json"), file(control_fastq), file("control_json"), file("graphs") from ref_treatment_json_ch.combine(ref_control_json_ch).filter{design[it.get(0).getName()] == design[it.get(2).getName()]}.combine(ref_peak_linear_ch).map{ it.flatten()}.view()
 
-//         output:
-//         set val(name), file("ref_${name}_peaks.narrowPeak") into ref_peaks_ch
+        output:
+        set val(name), file("ref_${name}_peaks.narrowPeak") into ref_peaks_ch
 
-//         script:
-//         name = fastq.getSimpleName()
-//         """
-//         (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 'graph_peak_caller count_unique_reads chr{} graphs/ json/${name}_ref_ | tail -n 1 > counted_unique_reads_chr{}.txt'
-//         read_length=\$(zcat $fastq | head -2 | tail -1 | wc -c)
-//         unique_reads=\$(awk 'BEGIN{i=0}{i = i + \$1}END{print i}' counted_unique_reads_chr*.txt)
-//         (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 "graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_ref_chr{}.json -c control_json/${control_name}_ref_chr{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r \$read_length -u \$unique_reads -n chr{}"
-//         rename 'touched' '_touched' *touched*
-//         rename 'background' '_background' *background*
-//         rename 'direct' '_direct' *direct*
-//         rename 'fragment' '_fragment' *fragment*
-//         rename 'pvalues' '_pvalues' *pvalues*
+        script:
+        name = fastq.getSimpleName()
+        control_name = control_fastq.getSimpleName()
+        """
+        (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 'graph_peak_caller count_unique_reads chr{} graphs/ json/${name}_ref_ | tail -n 1 > counted_unique_reads_chr{}.txt'
+        read_length=\$(zcat $fastq | head -2 | tail -1 | wc -c)
+        unique_reads=\$(awk 'BEGIN{i=0}{i = i + \$1}END{print i}' counted_unique_reads_chr*.txt)
+        (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 "graph_peak_caller callpeaks -g graphs/chr{}.nobg -s json/${name}_ref_chr{}.json -c control_json/${control_name}_ref_chr{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r \$read_length -u \$unique_reads -n chr{}"
+        rename 'touched' '_touched' *touched*
+        rename 'background' '_background' *background*
+        rename 'direct' '_direct' *direct*
+        rename 'fragment' '_fragment' *fragment*
+        rename 'pvalues' '_pvalues' *pvalues*
 
-//         (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 'graph_peak_caller callpeaks_whole_genome_from_p_values -d graphs/ -n "" -f ${params.fragment_length} -r \$read_length chr{}'
-//         (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 'graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed'
-//         cat *_linear_peaks.bed | sort-bed - > ref_${name}_peaks.narrowPeak
-//     """
-//     }
-// }
+        (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 'graph_peak_caller callpeaks_whole_genome_from_p_values -d graphs/ -n "" -f ${params.fragment_length} -r \$read_length chr{}'
+        (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 'graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed'
+        cat *_linear_peaks.bed | sort-bed - > ref_${name}_peaks.narrowPeak
+    """
+    }
+}
 
-// if(params.altered){
-//     process alteredPeaks {
-//         cpus = 1
-//         publishDir "$params.outDir/peaks", mode: "copy"
-//         input:
-//         set val(name), file(pop_peaks) from pop_peaks_ch
-//         set val(name), file(ref_peaks) from ref_peaks_ch
-//         output:
-//         file "*.narrowPeak"
+if(params.altered){
+    process alteredPeaks {
+        cpus = 1
+        publishDir "$params.outDir/peaks", mode: "copy"
+        input:
+        set val(name), file(pop_peaks) from pop_peaks_ch
+        set val(name), file(ref_peaks) from ref_peaks_ch
+        output:
+        file "*.narrowPeak"
 
-//         script:
-//         """
-//     module load bedtools
-//     bedtools subtract -A -a ${pop_peaks} -b ${ref_peaks} > ${name}_pers-only.narrowPeak
-//     bedtools subtract -A -b ${pop_peaks} -a ${ref_peaks} > ${name}_ref-only.narrowPeak
-//     bedtools intersect -wa -a ${pop_peaks} -b ${ref_peaks} > ${name}_intersected.narrowPeak
-//     """
+        script:
+        """
+    module load bedtools
+    bedtools subtract -A -a ${pop_peaks} -b ${ref_peaks} > ${name}_pers-only.narrowPeak
+    bedtools subtract -A -b ${pop_peaks} -a ${ref_peaks} > ${name}_ref-only.narrowPeak
+    bedtools intersect -wa -a ${pop_peaks} -b ${ref_peaks} > ${name}_intersected.narrowPeak
+    """
 
-//     }
-// }
+    }
+}
