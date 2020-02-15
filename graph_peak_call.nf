@@ -350,7 +350,7 @@ if(params.altered){
         cpus = 1
         publishDir "$params.outDir/peaks", mode: "copy"
         input:
-        set val(name), file(pop_peaks), val(name), file(ref_peaks) from pop_peaks_ch.combine(ref_peaks_ch, by: 0).view()
+        set val(name), file(pop_peaks), val(ref_name), file(ref_peaks) from pop_peaks_ch.combine(ref_peaks_ch, by: 0).view()
         output:
         file "*.narrowPeak"
 
