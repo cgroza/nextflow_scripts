@@ -350,8 +350,7 @@ if(params.altered){
         cpus = 1
         publishDir "$params.outDir/peaks", mode: "copy"
         input:
-        set val(name), file(pop_peaks) from pop_peaks_ch
-        set val(name), file(ref_peaks) from ref_peaks_ch
+        set val(name), file(pop_peaks), val(name), file(ref_peaks) from pop_peaks_ch.combine(ref_peaks_ch, by: 0).view()
         output:
         file "*.narrowPeak"
 
@@ -362,6 +361,5 @@ if(params.altered){
     bedtools subtract -A -b ${pop_peaks} -a ${ref_peaks} > ${name}_ref-only.narrowPeak
     bedtools intersect -wa -a ${pop_peaks} -b ${ref_peaks} > ${name}_intersected.narrowPeak
     """
-
     }
 }
