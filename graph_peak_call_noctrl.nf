@@ -1,4 +1,6 @@
-params.design_file = "design.tsv"
+params.ref_gams = "ref_gams.tsv"
+params.pop_gams = "pop_gams.tsv"
+
 params.ref_graph = "ref/"
 params.pop_graph = "pop/"
 params.ref_name = "ref"
@@ -20,8 +22,17 @@ chromosomes = "chr1_1,chr1_2,chr2_1,chr2_2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,ch
 Channel.fromPath("${params.pop_graph}/graphs/*.vg").set{linear_vg_ch}
 Channel.fromPath("${params.ref_graph}/graphs/*.vg").set{ref_linear_vg_ch}
 
-Channel.fromPath(pop_gams).unique().into{gam_ch}
-Channel.fromPath(ref_gams).unique().into{ref_gam_ch}
+def pop_gams = []
+def ref_gams = []
+new File(params.pop_gams).eachLine { line ->
+    pop_gams << line
+}
+new File(params.ref_gams).eachLine { line ->
+    ref_gams << line
+}
+
+Channel.fromPath(pop_gams).into{gam_ch}
+Channel.fromPath(ref_gams).into{ref_gam_ch}
 
 Channel.fromPath(
     ["${params.ref_graph}/${params.ref_name}.xg",
