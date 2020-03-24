@@ -31,6 +31,11 @@ new File(params.ref_gams).eachLine { line ->
     ref_gams << line
 }
 
+println("Pop gams: ")
+print(pop_gams)
+println("Ref gams: ")
+print(ref_gams)
+
 Channel.fromPath(pop_gams).into{gam_ch}
 Channel.fromPath(ref_gams).into{ref_gam_ch}
 
