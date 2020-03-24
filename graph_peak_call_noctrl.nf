@@ -36,8 +36,8 @@ print(pop_gams)
 println("Ref gams: ")
 print(ref_gams)
 
-Channel.fromPath(pop_gams).into{gam_ch}
-Channel.fromPath(ref_gams).into{ref_gam_ch}
+Channel.fromPath(pop_gams).set{gam_ch}
+Channel.fromPath(ref_gams).set{ref_gam_ch}
 
 Channel.fromPath(
     ["${params.ref_graph}/${params.ref_name}.xg",
