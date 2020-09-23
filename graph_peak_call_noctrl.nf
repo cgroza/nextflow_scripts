@@ -168,7 +168,7 @@ process processGamPop {
 if(params.peak_call) {
     process callPeaksPop{
         cpus = 40
-        memory '120 GB'
+        memory '180 GB'
         time '24h'
 
         publishDir "$params.outDir/peaks", pattern: "${name}_peaks.narrowPeak", mode: "copy"
@@ -194,14 +194,14 @@ if(params.peak_call) {
         rename 'fragment' '_fragment' *fragment*
         rename 'pvalues' '_pvalues' *pvalues*
 
-        (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 "graph_peak_caller callpeaks_whole_genome_from_p_values -q ${params.qvalue} -d graphs/ -n '' -f ${params.fragment_length} -r \$read_length chr{}"
+        (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 "graph_peak_caller callpeaks_whole_genome_from_p_values -q ${params.qvalue} -d graphs/ -n '' -f ${params.fragment_length} -r \${read_length} chr{}"
         (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 'graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed'
-        cat *_linear_peaks.bed | sort-bed - > ${name}_peaks.narrowPeak
+        cat *_linear_peaks.bed | awk '\$2<\$3' | sort-bed - > ${name}_peaks.narrowPeak
     """
     }
     process callPeaksRef{
         cpus = 40
-        memory '120 GB'
+        memory '180 GB'
         time '24h'
 
         publishDir "$params.outDir/peaks", pattern: "ref_${name}_peaks.narrowPeak", mode: "copy"
@@ -228,7 +228,7 @@ if(params.peak_call) {
 
         (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 "graph_peak_caller callpeaks_whole_genome_from_p_values -q ${params.qvalue} -d graphs/ -n '' -f ${params.fragment_length} -r \$read_length chr{}"
         (seq 3 22; echo X; echo Y; echo 1_1; echo 1_2; echo 2_1; echo 2_2) | parallel -j 3 'graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed'
-        cat *_linear_peaks.bed | sort-bed - > ref_${name}_peaks.narrowPeak
+        cat *_linear_peaks.bed | awk '\$2<\$3' | sort-bed - > ref_${name}_peaks.narrowPeak
     """
     }
 }
