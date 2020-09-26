@@ -55,7 +55,7 @@ process indexGBWT_XG {
 TMPDIR=/home/cgroza/scratch/temp
 (seq 1 22; echo X; echo Y) | parallel -j 8 "touch -h chr{}.vcf.gz.tbi ; vg index -G chr{}.gbwt -v chr{}.vcf.gz chr{}.vg"
 vg gbwt -m -f -o ${params.genome}_index.gbwt chr*.gbwt
-vg index -x ${params.genome}_index.xg *.vg
+vg index -L -x ${params.genome}_index.xg *.vg
 """
 }
 
