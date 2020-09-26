@@ -2,6 +2,7 @@ params.ref = "/home/cgroza/Homo_sapiens.hg19.noalts.fa"
 params.genome = "EU_AF"
 params.outdir = workflow.launchDir
 params.vcf = "$params.outdir/renamed_Epi_EU_AF_phased.vcf.gz"
+params.tmp = "/home/cgroza/scratch/temp"
 
 Channel.fromPath(params.vcf).into{vcf_con_ch; vcf_gbwt_ch}
 
@@ -52,10 +53,10 @@ process indexGBWT_XG {
 
     script:
     """
-TMPDIR=/home/cgroza/scratch/temp
+TMPDIR=${params.tmp}
 (seq 1 22; echo X; echo Y) | parallel -j 8 "touch -h chr{}.vcf.gz.tbi ; vg index -G chr{}.gbwt -v chr{}.vcf.gz chr{}.vg"
 vg gbwt -m -f -o ${params.genome}_index.gbwt chr*.gbwt
-vg index -L -x ${params.genome}_index.xg *.vg
+vg index -b \${TMPDIR} -L -x ${params.genome}_index.xg *.vg
 """
 }
 
@@ -78,12 +79,12 @@ process indexGCSA {
     script:
     """
 mkdir graphs
-TMPDIR=/home/cgroza/scratch/temp
+TMPDIR=${params.tmp}
 cp ${mapping} mapping.backup
 for i in \$(seq 1 22; echo X; echo Y); do
     vg prune -a -m mapping.backup -u -g chr\${i}.gbwt chr\${i}.vg > graphs/chr\${i}.pruned.vg
 done
 
-vg index -g ${params.genome}_index.gcsa -f mapping.backup graphs/*.pruned.vg
+vg index -b \${TMPDIR} -g ${params.genome}_index.gcsa -f mapping.backup graphs/*.pruned.vg
 """
 }
