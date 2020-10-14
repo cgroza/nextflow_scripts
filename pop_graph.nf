@@ -14,7 +14,7 @@ process makeVg {
     memory '100 GB'
     cpus 40
 
-    publishDir "$params.outdir/graphs", mode: 'copy', pattern: "*.vg"
+    publishDir "$params.outdir/graphs", mode: 'copy', pattern: "graphs/*.vg"
 
     input:
     file vcf from vcf_con_ch
