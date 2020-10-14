@@ -51,7 +51,6 @@ if(params.index_gbwt) {
 
         output:
         file "${params.genome}_index.gbwt"
-        file "${params.genome}_index.xg" into xg_ch
         file "*.gbwt" into gbwt_ch
 
         script:
