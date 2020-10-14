@@ -1,5 +1,8 @@
 params.ref = "/home/cgroza/Homo_sapiens.hg19.noalts.fa"
 params.genome = "EU_AF"
+params.index_gcsa = true
+params.index_xg = true
+params.index_gbwt = true
 params.outdir = workflow.launchDir
 params.vcf = "$params.outdir/renamed_Epi_EU_AF_phased.vcf.gz"
 params.tmp = "/home/cgroza/scratch/temp"
@@ -17,7 +20,7 @@ process makeVg {
     file vcf from vcf_con_ch
 
     output:
-    file "graphs/*.vg" into vgs_ch_gbwt, vgs_ch_gcsa
+    file "graphs/*.vg" into vgs_ch_gbwt, vgs_ch_gcsa, vgs_ch_xg
     file "*.tbi" into vcf_index_ch
     file "*.vcf.gz" into vcf_ch
     file "mapping" into mapping_ch
@@ -34,57 +37,79 @@ vg ids -m mapping -j \$(for i in \$(seq 1 22; echo X; echo Y); do echo graphs/ch
 """
 }
 
-process indexGBWT_XG {
-    cpus 40
-    time '2d'
-    memory '180 GB'
-    publishDir "$params.outdir", mode: 'copy', pattern: "${params.genome}_index.gbwt"
-    publishDir "$params.outdir", mode: 'copy', pattern: "${params.genome}_index.xg"
+if(params.index_gbwt) {
+    process indexGBWT {
+        cpus 40
+        time '2d'
+        memory '180 GB'
+        publishDir "$params.outdir", mode: 'copy', pattern: "${params.genome}_index.gbwt"
 
-    input:
-    file "*" from vgs_ch_gbwt.collect()
-    file "*" from vcf_ch.collect()
-    file "*" from vcf_index_ch.collect()
+        input:
+        file "*" from vgs_ch_gbwt.collect()
+        file "*" from vcf_ch.collect()
+        file "*" from vcf_index_ch.collect()
 
-    output:
-    file "${params.genome}_index.gbwt"
-    file "${params.genome}_index.xg" into xg_ch
-    file "*.gbwt" into gbwt_ch
+        output:
+        file "${params.genome}_index.gbwt"
+        file "${params.genome}_index.xg" into xg_ch
+        file "*.gbwt" into gbwt_ch
 
-    script:
-    """
-TMPDIR=${params.tmp}
-(seq 1 22; echo X; echo Y) | parallel -j 8 "touch -h chr{}.vcf.gz.tbi ; vg index -G chr{}.gbwt -v chr{}.vcf.gz chr{}.vg"
-vg gbwt -m -f -o ${params.genome}_index.gbwt chr*.gbwt
-vg index -b \${TMPDIR} -L -x ${params.genome}_index.xg *.vg
-"""
+        script:
+        """
+        TMPDIR=${params.tmp}
+        (seq 1 22; echo X; echo Y) | parallel -j 8 "touch -h chr{}.vcf.gz.tbi ; vg index -G chr{}.gbwt -v chr{}.vcf.gz chr{}.vg"
+        vg gbwt -m -f -o ${params.genome}_index.gbwt chr*.gbwt
+        """
+    }
 }
 
+if(params.index_xg) {
+    process index_XG {
+        publishDir "$params.outdir", mode: 'copy', pattern: "${params.genome}_index.xg"
+        cpus 40
+        time '6h'
+        memory '180GB'
 
-process indexGCSA {
-    cpus 40
-    time '2d'
-    memory '180 GB'
-    publishDir "$params.outdir", mode: 'copy'
+        input:
+        file "*" from vgs_ch_xg.collect()
 
-    input:
-    file "*" from vgs_ch_gcsa.collect()
-    file "*" from gbwt_ch.collect()
-    file mapping from mapping_ch
+        output:
+        file "*.xg"
 
-    output:
-    file "${params.genome}_index.gcsa"
-    file "${params.genome}_index.gcsa.lcp"
+        script:
+        """
+        TMPDIR=${params.tmp}
+        vg index -b \${TMPDIR} -L -x ${params.genome}_index.xg *.vg
+        """
+    }
+}
 
-    script:
-    """
-mkdir graphs
-TMPDIR=${params.tmp}
-cp ${mapping} mapping.backup
-for i in \$(seq 1 22; echo X; echo Y); do
-    vg prune -a -m mapping.backup -u -g chr\${i}.gbwt chr\${i}.vg > graphs/chr\${i}.pruned.vg
-done
+if(params.index_gcsa) {
+    process indexGCSA {
+        cpus 40
+        time '2d'
+        memory '180 GB'
+        publishDir "$params.outdir", mode: 'copy'
 
-vg index -b \${TMPDIR} -g ${params.genome}_index.gcsa -f mapping.backup graphs/*.pruned.vg
-"""
+        input:
+        file "*" from vgs_ch_gcsa.collect()
+        file "*" from gbwt_ch.collect()
+        file mapping from mapping_ch
+
+        output:
+        file "${params.genome}_index.gcsa"
+        file "${params.genome}_index.gcsa.lcp"
+
+        script:
+        """
+        mkdir graphs
+        TMPDIR=${params.tmp}
+        cp ${mapping} mapping.backup
+        for i in \$(seq 1 22; echo X; echo Y); do
+        vg prune -a -m mapping.backup -u -g chr\${i}.gbwt chr\${i}.vg > graphs/chr\${i}.pruned.vg
+        done
+
+        vg index -b \${TMPDIR} -g ${params.genome}_index.gcsa -f mapping.backup graphs/*.pruned.vg
+        """
+    }
 }
