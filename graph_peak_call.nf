@@ -13,6 +13,7 @@ params.mem = '100 GB'
 params.sort = false
 params.peak_call = true
 params.altered = false
+params.storeDir = "store"
 
 params.outDir = workflow.launchDir
 
@@ -72,6 +73,7 @@ process vgToJsonPop {
     cpus = 40
     memory '120 GB'
     time '24h'
+    storeDir "${params.storeDir}"
 
     input:
     file "graphs/*" from linear_vg_ch.collect()
@@ -89,6 +91,7 @@ process vgToJsonRef {
     cpus = 40
     memory '120 GB'
     time '24h'
+    storeDir "${params.storeDir}"
 
     input:
     file "graphs/*" from ref_linear_vg_ch.collect()
