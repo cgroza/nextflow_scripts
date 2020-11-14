@@ -55,9 +55,9 @@ Channel.fromPath(
 
 process vgToJsonPop {
     cpus = 40
-    memory '120 GB'
+    memory '170 GB'
     time '24h'
-    storeDir "${params.storeDir}"
+    storeDir "${params.storeDir}/${params.pop_name}"
 
     input:
     file "graphs/*" from linear_vg_ch.collect()
@@ -73,9 +73,9 @@ process vgToJsonPop {
 
 process vgToJsonRef {
     cpus = 40
-    memory '120 GB'
+    memory '170 GB'
     time '24h'
-    storeDir "${params.storeDir}"
+    storeDir "${params.storeDir}/${params.ref_name}"
 
     input:
     file "graphs/*" from ref_linear_vg_ch.collect()
@@ -91,9 +91,9 @@ process vgToJsonRef {
 
 process linearPathsPop {
     cpus = 40
-    memory '120 GB'
+    memory '170 GB'
     time '24 h'
-    storeDir "${params.storeDir}"
+    storeDir "${params.storeDir}/${params.pop_name}_linear"
 
     input:
     file "graphs/*" from vg2json_ch.collect()
@@ -103,16 +103,16 @@ process linearPathsPop {
 
     script:
     """
-   (seq 1 22; echo X; echo Y) | parallel -j 3 graph_peak_caller find_linear_path -g graphs/chr{}.nobg graphs/chr{}.json chr{} graphs/chr{}_linear_pathv2.interval
+   (seq 1 22; echo X; echo Y) | parallel -j 3 graph_peak_caller find_linear_path -g graphs/chr{}.nobg graphs/chr{}.json {} graphs/chr{}_linear_pathv2.interval
 """
 }
 
 
 process linearPathsRef {
     cpus = 40
-    memory '120 GB'
+    memory '170 GB'
     time '24 h'
-    storeDir "${params.storeDir}"
+    storeDir "${params.storeDir}/${params.ref_name}_linear"
 
     input:
     file "graphs/*" from ref_vg2json_ch.collect()
@@ -122,7 +122,7 @@ process linearPathsRef {
 
     script:
     """
-     (seq 1 22; echo X; echo Y) | parallel -j 3 graph_peak_caller find_linear_path -g graphs/chr{}.nobg graphs/chr{}.json chr{} graphs/chr{}_linear_pathv2.interval
+     (seq 1 22; echo X; echo Y) | parallel -j 3 graph_peak_caller find_linear_path -g graphs/chr{}.nobg graphs/chr{}.json {} graphs/chr{}_linear_pathv2.interval
 """
 }
 
@@ -200,7 +200,7 @@ if(params.peak_call) {
         rename 'pvalues' '_pvalues' *pvalues*
 
         (seq 1 22; echo X; echo Y) | parallel -j 3 "graph_peak_caller callpeaks_whole_genome_from_p_values -q ${params.qvalue} -d graphs/ -n '' -f ${params.fragment_length} -r \${read_length} chr{}"
-        (seq 1 22; echo X; echo Y) | parallel -j 3 'graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed'
+        (seq 1 22; echo X; echo Y) | parallel -j 3 'graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval {} chr{}_linear_peaks.bed'
         cat *_linear_peaks.bed | awk '\$2<\$3' | sort-bed - > ${name}_peaks.narrowPeak
     """
     }
@@ -232,7 +232,7 @@ if(params.peak_call) {
         rename 'pvalues' '_pvalues' *pvalues*
 
         (seq 1 22; echo X; echo Y) | parallel -j 3 "graph_peak_caller callpeaks_whole_genome_from_p_values -q ${params.qvalue} -d graphs/ -n '' -f ${params.fragment_length} -r \$read_length chr{}"
-        (seq 1 22; echo X; echo Y) | parallel -j 3 'graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed'
+        (seq 1 22; echo X; echo Y) | parallel -j 3 'graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval {} chr{}_linear_peaks.bed'
         cat *_linear_peaks.bed | awk '\$2<\$3' | sort-bed - > ref_${name}_peaks.narrowPeak
     """
     }

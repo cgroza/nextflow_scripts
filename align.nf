@@ -25,7 +25,7 @@ if(params.gbwt) {
 		time '1d'
 		cpus 40
 		memory '100 GB'
-		publishDir "$workflow.launchDir/gams"
+		publishDir "$workflow.launchDir/gams", mode: 'move'
 
 		input:
 		set file("index.xg"), file("index.gbwt"), file('index.gcsa'), file('index.gcsa.lcp'), file(reads) from xg_ch.combine(gbwt_ch).combine(gcsa_ch).combine(gcsa_lcp_ch).combine(reads_ch)
@@ -37,7 +37,7 @@ if(params.gbwt) {
 		extension = reads.getExtension()
 		reads_name = params.prefix + reads.getSimpleName()
 		switch(extension) {
-			case "fastq.gz": case "fq.gz":
+			case "gz":
 				vg_flag = "${vg_flag} -f"
 				break
 			case "bam":
@@ -48,7 +48,7 @@ if(params.gbwt) {
 				break
 		}
 	"""
-		vg map --threads 40 --gcsa-name index.gcsa --xg-name index.xg --gbwt-name index.gbwt ${vg_flag} -f ${reads} > ${reads_name}.gam
+		vg map --threads 40 --gcsa-name index.gcsa --xg-name index.xg --gbwt-name index.gbwt ${vg_flag} ${reads} > ${reads_name}.gam
 		"""
 	}
 }
@@ -57,7 +57,7 @@ else {
 		time '1d'
 		cpus 40
 		memory '100 GB'
-		publishDir "$workflow.launchDir/gams"
+		publishDir "$workflow.launchDir/gams", mode: 'move'
 
 		input:
 		set file("index.xg"), file('index.gcsa'), file('index.gcsa.lcp'), file(reads) from xg_ch.combine(gcsa_ch).combine(gcsa_lcp_ch).combine(reads_ch)
@@ -69,7 +69,7 @@ else {
 		extension = reads.getExtension()
 		reads_name = params.prefix + reads.getSimpleName()
 		switch(extension) {
-			case "fastq.gz": case "fq.gz":
+			case "gz":
 				vg_flag = "${vg_flag} -f"
 				break
 			case "bam":
