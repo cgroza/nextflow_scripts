@@ -8,8 +8,6 @@ params.fragment_length = 200
 params.qvalue = 0.05
 params.paired = true
 params.sort = false
-params.peak_call = true
-params.altered = false
 params.storeDir = "store"
 
 params.outDir = workflow.launchDir
@@ -95,38 +93,36 @@ process processGamPop {
 """
 }
 
-if(params.peak_call) {
-    process callPeaksPop{
-        cpus = 40
-        memory '170 GB'
-        time '24h'
+process callPeaksPop{
+    cpus = 40
+    memory '170 GB'
+    time '24h'
 
-        publishDir "$params.outDir/peaks", pattern: "${name}_peaks.narrowPeak", mode: "copy"
+    publishDir "$params.outDir/peaks", pattern: "${name}_peaks.narrowPeak", mode: "copy"
 
-        input:
-        set file(gam), file("json"), file("graphs") from treatment_json_ch.combine(peak_linear_ch).map{ it.flatten()}.view()
+    input:
+    set file(gam), file("json"), file("graphs") from treatment_json_ch.combine(peak_linear_ch).map{ it.flatten()}.view()
 
-        output:
-        set val(name), file("${name}_peaks.narrowPeak") into pop_peaks_ch
+    output:
+    set val(name), file("${name}_peaks.narrowPeak") into pop_peaks_ch
 
-        script:
-        name = gam.getSimpleName()
+    script:
+    name = gam.getSimpleName()
 
-        """
-        (seq 1 22; echo X; echo Y) | parallel -j 3 'graph_peak_caller count_unique_reads chr{} graphs/ json/${name}_pop_ | tail -n 1 > counted_unique_reads_chr{}.txt'
-        read_length=\$(vg view -X $gam | head -2 | tail -1 | wc -c)
-        unique_reads=\$(awk 'BEGIN{i=0}{i = i + \$1}END{print i}' counted_unique_reads_chr*.txt)
-        (seq 1 22; echo X; echo Y) | parallel -j 3 "graph_peak_caller callpeaks -q ${params.qvalue} -g graphs/chr{}.nobg -s json/${name}_pop_chr{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r \$read_length -u \$unique_reads -n chr{}"
-
-        rename 'touched' '_touched' *touched*
-        rename 'background' '_background' *background*
-        rename 'direct' '_direct' *direct*
-        rename 'fragment' '_fragment' *fragment*
-        rename 'pvalues' '_pvalues' *pvalues*
-
-        (seq 1 22; echo X; echo Y) | parallel -j 3 "graph_peak_caller callpeaks_whole_genome_from_p_values -q ${params.qvalue} -d graphs/ -n '' -f ${params.fragment_length} -r \${read_length} chr{}"
-        (seq 1 22; echo X; echo Y) | parallel -j 3 'graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed'
-        cat *_linear_peaks.bed | awk '\$2<\$3' | sort-bed - > ${name}_peaks.narrowPeak
     """
-    }
+    (seq 1 22; echo X; echo Y) | parallel -j 3 'graph_peak_caller count_unique_reads chr{} graphs/ json/${name}_pop_ | tail -n 1 > counted_unique_reads_chr{}.txt'
+    read_length=\$(vg view -X $gam | head -2 | tail -1 | wc -c)
+    unique_reads=\$(awk 'BEGIN{i=0}{i = i + \$1}END{print i}' counted_unique_reads_chr*.txt)
+    (seq 1 22; echo X; echo Y) | parallel -j 3 "graph_peak_caller callpeaks -q ${params.qvalue} -g graphs/chr{}.nobg -s json/${name}_pop_chr{}.json -G ${params.genome_size} -p True -f ${params.fragment_length} -r \$read_length -u \$unique_reads -n chr{}"
+
+    rename 'touched' '_touched' *touched*
+    rename 'background' '_background' *background*
+    rename 'direct' '_direct' *direct*
+    rename 'fragment' '_fragment' *fragment*
+    rename 'pvalues' '_pvalues' *pvalues*
+
+    (seq 1 22; echo X; echo Y) | parallel -j 3 "graph_peak_caller callpeaks_whole_genome_from_p_values -q ${params.qvalue} -d graphs/ -n '' -f ${params.fragment_length} -r \${read_length} chr{}"
+    (seq 1 22; echo X; echo Y) | parallel -j 3 'graph_peak_caller peaks_to_linear chr{}_max_paths.intervalcollection graphs/chr{}_linear_pathv2.interval chr{} chr{}_linear_peaks.bed'
+    cat *_linear_peaks.bed | awk '\$2<\$3' | sort-bed - > ${name}_peaks.narrowPeak
+"""
 }
