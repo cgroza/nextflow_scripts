@@ -85,3 +85,21 @@ else {
 	}
 
 }
+
+process packGAM {
+		time '12h'
+		cpus 40
+		memory '71 GB'
+		publishDir "$workflow.launchDir/packs", mode: 'move'
+
+    input:
+    file(gam) from aln
+
+    output:
+    file "pack_${gam}"
+
+    script:
+    """
+    vg pack -t 40 -g ${gam} -x ${params.xg} -o pack_${gam}
+    """
+}
