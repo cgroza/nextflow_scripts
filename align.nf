@@ -24,7 +24,7 @@ if(params.gbwt) {
 	process alignFastq {
 		time '1d'
 		cpus 40
-		memory '100 GB'
+		memory '71 GB'
 		publishDir "$workflow.launchDir/gams", mode: 'move'
 
 		input:
@@ -56,7 +56,7 @@ else {
 	process alignFastqNoGBWT {
 		time '1d'
 		cpus 40
-		memory '100 GB'
+		memory '71 GB'
 		publishDir "$workflow.launchDir/gams", mode: 'move'
 
 		input:

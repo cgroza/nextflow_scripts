@@ -95,7 +95,7 @@ process processGamPop {
 process callPeaksPop{
     cpus = 40
     memory '170 GB'
-    time '24h'
+    time '12h'
 
     publishDir "$params.outDir/peaks", mode: "copy"
 
@@ -114,8 +114,12 @@ process callPeaksPop{
     (seq 1 22; echo X; echo Y) | parallel -j 10 'graph_peak_caller estimate_shift {} graphs/ json/${name}_ 2 100 | tail -n 1 | sed -n -e "s/.*Found shift: \\([:digit:]*\\)/\\1/p" > fragment_size_{}.txt'
     read_length=\$(vg view -X $gam | head -2 | tail -1 | wc -c)
     fragment_length=\$(awk 'BEGIN{i=0}{i = i + \$1}END{print int(i/NR)}' fragment_size_*.txt)
+    if [ \$fragment_length -le \$read_length ]
+    then
+        fragment_length=200
+    fi
     unique_reads=\$(awk 'BEGIN{i=0}{i = i + \$1}END{print i}' counted_unique_reads_*.txt)
-    (seq 1 22; echo X; echo Y) | parallel -j 10 "graph_peak_caller callpeaks -q ${params.qvalue} -g graphs/{}.nobg -s json/${name}_pop_{}.json -G ${params.genome_size} -p True -f \$fragment_length -r \$read_length -u \$unique_reads -n {}"
+    (seq 1 22; echo X; echo Y) | parallel -j 10 "graph_peak_caller callpeaks -q ${params.qvalue} -g graphs/{}.nobg -s json/${name}_{}.json -G ${params.genome_size} -p True -f \$fragment_length -r \$read_length -u \$unique_reads -n {}"
 
     rename 'touched' '_touched' *touched*
     rename 'background' '_background' *background*
