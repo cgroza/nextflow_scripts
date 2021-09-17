@@ -1,11 +1,11 @@
-params.ref = "/home/cgroza/Homo_sapiens.hg19.noalts.fa"
-params.genome = "EU_AF"
+params.ref = "reference.fa"
+params.genome = "graph"
 params.index_gcsa = true
 params.index_xg = true
 params.index_gbwt = true
 params.outdir = workflow.launchDir
-params.vcf = "$params.outdir/renamed_Epi_EU_AF_phased.vcf.gz"
-params.tmp = "/home/cgroza/scratch/temp"
+params.vcf = "variants.vcf.gz"
+params.tmp = "~/scratch/temp"
 
 Channel.fromPath(params.vcf).into{vcf_con_ch; vcf_gbwt_ch}
 
@@ -27,12 +27,12 @@ process makeVg {
 
     script:
     """
-module load tabix
+module load bcftools
 tabix -p vcf $vcf
-(seq 1 22; echo X; echo Y) | parallel -j 24 "tabix -h $vcf {} > chr{}.vcf ; bgzip chr{}.vcf ; tabix chr{}.vcf.gz"
+(seq 1 22; echo X; echo Y) | parallel -j 24 "tabix -h $vcf chr{} > chr{}.vcf ; bgzip chr{}.vcf ; tabix chr{}.vcf.gz"
 
 mkdir graphs
-(seq 1 22; echo X; echo Y) | parallel -j 6  "vg construct -f -S -a -C -R {} -v chr{}.vcf.gz -r $params.ref -t 1 -m 32 > graphs/chr{}.vg"
+(seq 1 22; echo X; echo Y) | parallel -j 6  "vg construct -f -S -a -C -R chr{} -v chr{}.vcf.gz -r $params.ref -t 1 -m 32 > graphs/chr{}.vg"
 vg ids -m mapping -j \$(for i in \$(seq 1 22; echo X; echo Y); do echo graphs/chr\$i.vg; done)
 """
 }
